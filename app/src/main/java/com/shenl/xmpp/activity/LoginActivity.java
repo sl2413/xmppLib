@@ -9,10 +9,13 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.shenl.utils.MyUtils.PageUtils;
+import com.shenl.utils.MyUtils.ServiceUtils;
+import com.shenl.utils.activity.BaseActivity;
 import com.shenl.xmpp.R;
+import com.shenl.xmpplibrary.service.MsgService;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
-public class LoginActivity extends Activity {
+public class LoginActivity extends BaseActivity {
 
     private EditText et_name;
     private EditText et_pswd;
@@ -33,7 +36,7 @@ public class LoginActivity extends Activity {
         btn_login = findViewById(R.id.btn_login);
     }
 
-    private void initData() {
+    public void initData() {
 
     }
 
@@ -64,8 +67,7 @@ public class LoginActivity extends Activity {
                 XmppUtils.XmppLogin(LoginActivity.this, name, pswd, new XmppUtils.XmppListener() {
                     @Override
                     public void Success() {
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(intent);
+                        openActivity(MainActivity.class);
                         finish();
                     }
 

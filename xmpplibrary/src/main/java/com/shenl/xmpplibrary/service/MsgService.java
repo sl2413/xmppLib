@@ -4,13 +4,17 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+
 import com.shenl.xmpplibrary.utils.XmppUtils;
+
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Message;
 
 public class MsgService extends Service {
 
+    public static XMPPConnection xmppConnection;
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -18,7 +22,6 @@ public class MsgService extends Service {
 
     @Override
     public void onCreate() {
-        Log.e("shenl","服务开启");
         XmppUtils.XmppConnect(MsgService.this, "172.30.4.15", 5222, new XmppUtils.XmppListener() {
             @Override
             public void Success() {
@@ -32,7 +35,7 @@ public class MsgService extends Service {
 
             @Override
             public void Error(String error) {
-                Log.e("shenl",error);
+
             }
         });
         super.onCreate();

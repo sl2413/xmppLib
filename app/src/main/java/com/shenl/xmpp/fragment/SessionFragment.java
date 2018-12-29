@@ -45,7 +45,7 @@ public class SessionFragment extends Fragment {
                 String s = et_input.getText().toString().trim();
                 Message msg = new Message();
                 msg.setBody(s);
-                XmppUtils.XmppSendMessage("zhangxq@172.30.4.15", msg, new XmppUtils.XmppListener() {
+                XmppUtils.XmppSendMessage("shenl@172.30.4.15", msg, new XmppUtils.XmppListener() {
                     @Override
                     public void Success() {
                         PageUtils.showToast(getContext(),"发送成功");

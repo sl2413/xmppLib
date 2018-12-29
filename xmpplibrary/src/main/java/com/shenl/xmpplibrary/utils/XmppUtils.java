@@ -3,6 +3,8 @@ package com.shenl.xmpplibrary.utils;
 import android.content.Context;
 import android.os.Handler;
 
+import com.shenl.xmpplibrary.service.MsgService;
+
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
@@ -20,7 +22,6 @@ import java.util.List;
 
 public class XmppUtils {
 
-    public static XMPPConnection xmppConnection;
     private static Handler mhandler = new Handler();
 
     /**
@@ -40,9 +41,9 @@ public class XmppUtils {
                     //创建连接配置对象
                     ConnectionConfiguration config = new ConnectionConfiguration(host, port);
                     //创建连接
-                    xmppConnection = new XMPPConnection(config);
+                    MsgService.xmppConnection = new XMPPConnection(config);
                     //开始连接
-                    xmppConnection.connect();
+                    MsgService.xmppConnection.connect();
                     listener.Success();
                 } catch (final XMPPException e) {
                     e.printStackTrace();
@@ -68,7 +69,7 @@ public class XmppUtils {
     public static void XmppLogin(final Context context, String name, String pswd, final XmppListener listener) {
         //开始登陆
         try {
-            xmppConnection.login(name, pswd, "Android");
+            MsgService.xmppConnection.login(name, pswd, "Android");
             mhandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -94,7 +95,7 @@ public class XmppUtils {
      * @return :
      */
     public static void XmppDisconnect() {
-        xmppConnection.disconnect();
+        MsgService.xmppConnection.disconnect();
     }
 
     /**
@@ -106,7 +107,7 @@ public class XmppUtils {
      * @return :
      */
     public static List<RosterEntry> XmppContacts() {
-        Roster roster = xmppConnection.getRoster();
+        Roster roster = MsgService.xmppConnection.getRoster();
         Collection<RosterEntry> entries = roster.getEntries();
         List<RosterEntry> list = new ArrayList<>();
         for (RosterEntry entry : entries) {
@@ -124,7 +125,7 @@ public class XmppUtils {
      */
     public static void XmppSendMessage(String toUserID, Message msg, XmppListener listener) {
         //获取消息管理类
-        ChatManager chatMan = xmppConnection.getChatManager();
+        ChatManager chatMan = MsgService.xmppConnection.getChatManager();
         //创建消息对象 参数（用户名称，MessageListener消息监听）
         Chat newchat = chatMan.createChat(toUserID, null);
         try {
@@ -146,7 +147,7 @@ public class XmppUtils {
      */
     public static void XmppGetMessage(final MessageListener listener) {
         //获取消息管理类
-        ChatManager chatMan = xmppConnection.getChatManager();
+        ChatManager chatMan = MsgService.xmppConnection.getChatManager();
         //添加聊天监听
         chatMan.addChatListener(new ChatManagerListener() {
             @Override
