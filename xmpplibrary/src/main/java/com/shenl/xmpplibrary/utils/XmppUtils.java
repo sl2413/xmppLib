@@ -2,14 +2,22 @@ package com.shenl.xmpplibrary.utils;
 
 import android.content.Context;
 import android.os.Handler;
+import android.util.Log;
 
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.ConnectionConfiguration;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class XmppUtils {
 
@@ -98,10 +106,56 @@ public class XmppUtils {
      *
      * @return :
      */
-    public static Collection<RosterEntry> XmppContacts() {
+    public static List<RosterEntry> XmppContacts() {
         Roster roster = xmppConnection.getRoster();
         Collection<RosterEntry> entries = roster.getEntries();
-        return entries;
+        List<RosterEntry> list = new ArrayList<>();
+        for (RosterEntry entry : entries) {
+            list.add(entry);
+        }
+        return list;
+    }
+
+    /**
+     * TODO 功能：发送消息
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2018/12/29
+     */
+    public static void XmppSendMessage(String toUserID, Message msg, XmppListener listener) {
+        //获取消息管理类
+        ChatManager chatMan = xmppConnection.getChatManager();
+        //创建消息对象 参数（用户名称，MessageListener消息监听）
+        Chat newchat = chatMan.createChat(toUserID, null);
+        try {
+            // 发送消息
+            newchat.sendMessage(msg);
+            listener.Success();
+        } catch (XMPPException e) {
+            e.printStackTrace();
+            listener.Error(e.getMessage());
+        }
+    }
+
+    /**
+     * TODO 功能：获取当前好友发来的消息
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2018/12/29
+     */
+    public static void XmppGetMessage(final MessageListener listener) {
+        //获取消息管理类
+        ChatManager chatMan = xmppConnection.getChatManager();
+        //添加聊天监听
+        chatMan.addChatListener(new ChatManagerListener() {
+            @Override
+            public void chatCreated(Chat chat, boolean able) {
+                // 添加消息监听
+                chat.addMessageListener(listener);
+            }
+        });
     }
 
 

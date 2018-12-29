@@ -12,8 +12,7 @@ import com.shenl.utils.MyUtils.PageUtils;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
 import org.jivesoftware.smack.RosterEntry;
-
-import java.util.Collection;
+import java.util.List;
 
 public class ContactsFragment extends Fragment {
 
@@ -22,14 +21,17 @@ public class ContactsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         TextView textView = new TextView(getContext());
         textView.setText("联系人页面");
-        Collection<RosterEntry> entries = XmppUtils.XmppContacts();
-        for(RosterEntry entry:entries){
+        List<RosterEntry> list = XmppUtils.XmppContacts();
+        for (int i=0;i<list.size();i++){
+            PageUtils.showLog("jid:"+list.get(i).getUser());
+        }
+        /*for(RosterEntry entry:entries){
             PageUtils.showLog("姓名:"+entry.getName());
             PageUtils.showLog("jid:"+entry.getUser());
-//            PageUtils.showLog("状态:"+entry.getStatus()+"");
-//            PageUtils.showLog("类型:"+entry.getType()+"");
-//            PageUtils.showLog("分组:"+entry.getGroups()+"");
-        }
+            PageUtils.showLog("状态:"+entry.getStatus()+"");
+            PageUtils.showLog("类型:"+entry.getType()+"");
+            PageUtils.showLog("分组:"+entry.getGroups()+"");
+        }*/
         return textView;
     }
 }
