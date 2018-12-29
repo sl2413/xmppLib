@@ -2,7 +2,6 @@ package com.shenl.xmpplibrary.utils;
 
 import android.content.Context;
 import android.os.Handler;
-import android.util.Log;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
@@ -21,7 +20,7 @@ import java.util.List;
 
 public class XmppUtils {
 
-    private static XMPPConnection xmppConnection;
+    public static XMPPConnection xmppConnection;
     private static Handler mhandler = new Handler();
 
     /**

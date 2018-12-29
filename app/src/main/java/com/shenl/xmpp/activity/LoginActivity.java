@@ -32,6 +32,7 @@ public class LoginActivity extends Activity {
         et_pswd = findViewById(R.id.et_pswd);
         btn_login = findViewById(R.id.btn_login);
     }
+
     private void initData() {
 
     }
@@ -70,7 +71,7 @@ public class LoginActivity extends Activity {
 
                     @Override
                     public void Error(String error) {
-                        PageUtils.showToast(LoginActivity.this,error);
+                        PageUtils.showToast(LoginActivity.this, error);
                     }
                 });
             }

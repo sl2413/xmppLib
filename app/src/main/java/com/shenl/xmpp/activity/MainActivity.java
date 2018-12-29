@@ -35,7 +35,7 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        XmppUtils.XmppDisconnect();
+//        XmppUtils.XmppDisconnect();
     }
 
     public void initView() {

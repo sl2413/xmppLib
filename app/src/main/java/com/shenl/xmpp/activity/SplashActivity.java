@@ -3,10 +3,10 @@ package com.shenl.xmpp.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.SystemClock;
 
+import com.shenl.utils.MyUtils.ServiceUtils;
 import com.shenl.xmpp.R;
-import com.shenl.xmpplibrary.utils.XmppUtils;
+import com.shenl.xmpplibrary.service.MsgService;
 
 public class SplashActivity extends Activity {
 
@@ -15,19 +15,14 @@ public class SplashActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        XmppUtils.XmppConnect(SplashActivity.this, "172.30.4.15", 5222, new XmppUtils.XmppListener() {
-            @Override
-            public void Success() {
-                SystemClock.sleep(2000);
-                Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
-            }
+        boolean b = ServiceUtils.isServiceWork(SplashActivity.this, "com.shenl.xmpplibrary.service.MsgService");
+        if (!b) {
+            Intent intent1 = new Intent(SplashActivity.this, MsgService.class);
+            startService(intent1);
+        }
 
-            @Override
-            public void Error(String error) {
-
-            }
-        });
+        Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

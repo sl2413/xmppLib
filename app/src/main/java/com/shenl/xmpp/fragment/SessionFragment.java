@@ -43,12 +43,6 @@ public class SessionFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 String s = et_input.getText().toString().trim();
-                XmppUtils.XmppGetMessage(new MessageListener() {
-                    @Override
-                    public void processMessage(Chat chat, Message message) {
-                        PageUtils.showLog(message.getBody());
-                    }
-                });
                 Message msg = new Message();
                 msg.setBody(s);
                 XmppUtils.XmppSendMessage("zhangxq@172.30.4.15", msg, new XmppUtils.XmppListener() {
