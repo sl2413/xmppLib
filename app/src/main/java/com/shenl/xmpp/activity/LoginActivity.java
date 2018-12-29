@@ -1,7 +1,5 @@
 package com.shenl.xmpp.activity;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -9,10 +7,8 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.shenl.utils.MyUtils.PageUtils;
-import com.shenl.utils.MyUtils.ServiceUtils;
 import com.shenl.utils.activity.BaseActivity;
 import com.shenl.xmpp.R;
-import com.shenl.xmpplibrary.service.MsgService;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
 public class LoginActivity extends BaseActivity {

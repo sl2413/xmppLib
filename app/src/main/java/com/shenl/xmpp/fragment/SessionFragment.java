@@ -3,7 +3,6 @@ package com.shenl.xmpp.fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,14 +13,13 @@ import com.shenl.utils.MyUtils.PageUtils;
 import com.shenl.xmpp.R;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
 
 public class SessionFragment extends Fragment {
 
     private EditText et_input;
     private Button btn_send;
+    private EditText et_toId;
 
     @Nullable
     @Override
@@ -29,6 +27,7 @@ public class SessionFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_session, null);
         et_input = view.findViewById(R.id.et_input);
         btn_send = view.findViewById(R.id.btn_send);
+        et_toId = view.findViewById(R.id.et_toId);
         initData();
         initEvent();
         return view;
@@ -43,9 +42,10 @@ public class SessionFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 String s = et_input.getText().toString().trim();
+                String jid = et_toId.getText().toString().trim();
                 Message msg = new Message();
                 msg.setBody(s);
-                XmppUtils.XmppSendMessage("shenl@172.30.4.15", msg, new XmppUtils.XmppListener() {
+                XmppUtils.XmppSendMessage(jid+"@172.30.4.15", msg, new XmppUtils.XmppListener() {
                     @Override
                     public void Success() {
                         PageUtils.showToast(getContext(),"发送成功");
