@@ -1,21 +1,20 @@
 package com.shenl.xmpplibrary.utils;
 
 import android.content.Context;
+import android.os.Handler;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
-import org.jivesoftware.smack.RosterGroup;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Presence;
 
 import java.util.Collection;
-import java.util.Iterator;
 
 public class XmppUtils {
 
     private static XMPPConnection xmppConnection;
+    private static Handler mhandler = new Handler();
 
     /**
      * TODO : 初始化连联服务器
@@ -25,8 +24,8 @@ public class XmppUtils {
      *
      * @return :
      */
-    public static void XmppConnect(final Context context, final String host, final int port, final Listener listener) {
-        ThreadUtils.runSonThread(new Runnable() {
+    public static void XmppConnect(final Context context, final String host, final int port, final XmppListener listener) {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 //开始连接
@@ -40,16 +39,15 @@ public class XmppUtils {
                     listener.Success();
                 } catch (final XMPPException e) {
                     e.printStackTrace();
-                    ThreadUtils.runMainThread(new Runnable() {
+                    mhandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            PageUtils.showToast(context, e.getMessage());
                             listener.Error(e.getMessage());
                         }
                     });
                 }
             }
-        });
+        }).start();
     }
 
     /**
@@ -60,18 +58,23 @@ public class XmppUtils {
      *
      * @return :
      */
-    public static void XmppLogin(final Context context, String name, String pswd, final Listener listener) {
+    public static void XmppLogin(final Context context, String name, String pswd, final XmppListener listener) {
         //开始登陆
         try {
             xmppConnection.login(name, pswd, "Android");
-            ThreadUtils.runMainThread(new Runnable() {
+            mhandler.post(new Runnable() {
                 @Override
                 public void run() {
                     listener.Success();
                 }
             });
-        } catch (XMPPException e) {
-            listener.Error(e.getMessage());
+        } catch (final XMPPException e) {
+            mhandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.Error(e.getMessage());
+                }
+            });
         }
     }
 
@@ -110,7 +113,7 @@ public class XmppUtils {
      *
      * @return :
      */
-    public interface Listener {
+    public interface XmppListener {
         void Success();
 
         void Error(String error);

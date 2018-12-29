@@ -8,8 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.shenl.xmpplibrary.utils.XmppUtils;
-
 public class SessionFragment extends Fragment {
 
     @Nullable

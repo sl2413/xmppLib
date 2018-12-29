@@ -8,8 +8,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.shenl.utils.MyUtils.PageUtils;
 import com.shenl.xmpp.R;
-import com.shenl.xmpplibrary.utils.PageUtils;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
 public class LoginActivity extends Activity {
@@ -60,7 +60,7 @@ public class LoginActivity extends Activity {
                     return;
                 }
 
-                XmppUtils.XmppLogin(LoginActivity.this, name, pswd, new XmppUtils.Listener() {
+                XmppUtils.XmppLogin(LoginActivity.this, name, pswd, new XmppUtils.XmppListener() {
                     @Override
                     public void Success() {
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);

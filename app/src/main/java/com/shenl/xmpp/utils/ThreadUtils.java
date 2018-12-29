@@ -1,10 +1,8 @@
-package com.shenl.xmpplibrary.utils;
-
+package com.shenl.xmpp.utils;
 
 import android.os.Handler;
 
 public class ThreadUtils {
-
     /**
      * TODO : 运行在子线程
      * 参数说明 :

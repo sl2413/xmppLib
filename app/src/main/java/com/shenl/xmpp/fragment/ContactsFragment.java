@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.shenl.xmpplibrary.utils.PageUtils;
+import com.shenl.utils.MyUtils.PageUtils;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
 import org.jivesoftware.smack.RosterEntry;
@@ -26,9 +26,9 @@ public class ContactsFragment extends Fragment {
         for(RosterEntry entry:entries){
             PageUtils.showLog("姓名:"+entry.getName());
             PageUtils.showLog("jid:"+entry.getUser());
-            PageUtils.showLog("状态:"+entry.getStatus()+"");
-            PageUtils.showLog("类型:"+entry.getType()+"");
-            PageUtils.showLog("分组:"+entry.getGroups()+"");
+//            PageUtils.showLog("状态:"+entry.getStatus()+"");
+//            PageUtils.showLog("类型:"+entry.getType()+"");
+//            PageUtils.showLog("分组:"+entry.getGroups()+"");
         }
         return textView;
     }
