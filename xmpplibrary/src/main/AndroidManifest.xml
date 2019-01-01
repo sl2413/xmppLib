@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application>
+        <activity android:name=".activiity.ChatActivity"/>
         <service android:name=".service.MsgService"/>
     </application>
 

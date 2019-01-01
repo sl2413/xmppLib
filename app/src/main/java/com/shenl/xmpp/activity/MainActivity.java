@@ -10,9 +10,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.shenl.xmpp.R;
-import com.shenl.xmpp.fragment.ContactsFragment;
-import com.shenl.xmpp.fragment.SessionFragment;
-import com.shenl.xmpplibrary.utils.XmppUtils;
+import com.shenl.xmpplibrary.fragment.ContactsFragment;
+import com.shenl.xmpplibrary.fragment.SessionFragment;
 
 import java.util.ArrayList;
 

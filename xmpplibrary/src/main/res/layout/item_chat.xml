@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/rec"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/rec_head"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/list_5"/>
+        <TextView
+            android:id="@+id/rec_body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/rec_head"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="20dp"
+            android:text="接收的消息接收的消息接收的消息接收的消息接收的消息接收的消息接收的消息接收的消息接收的消息接收的消息接收的消息接收的消息接收的消息"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/send"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp">
+        <ImageView
+            android:id="@+id/send_head"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/list_3"/>
+        <TextView
+            android:id="@+id/send_body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/send_head"
+            android:layout_marginRight="10dp"
+            android:layout_marginLeft="20dp"
+            android:text="发送的消息发送的消息发送的消息发送的消息"/>
+    </RelativeLayout>
+
+</LinearLayout>

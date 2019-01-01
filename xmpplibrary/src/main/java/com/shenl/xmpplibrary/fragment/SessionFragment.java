@@ -1,4 +1,4 @@
-package com.shenl.xmpp.fragment;
+package com.shenl.xmpplibrary.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -9,8 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.shenl.utils.MyUtils.PageUtils;
-import com.shenl.xmpp.R;
+import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
 import org.jivesoftware.smack.packet.Message;
@@ -48,12 +47,12 @@ public class SessionFragment extends Fragment {
                 XmppUtils.XmppSendMessage(jid+"@172.30.4.15", msg, new XmppUtils.XmppListener() {
                     @Override
                     public void Success() {
-                        PageUtils.showToast(getContext(),"发送成功");
+//                        PageUtils.showToast(getContext(),"发送成功");
                     }
 
                     @Override
                     public void Error(String error) {
-                        PageUtils.showLog(error);
+//                        PageUtils.showLog(error);
                     }
                 });
             }
