@@ -16,17 +16,18 @@ import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smackx.MultipleRecipientManager;
 import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.filetransfer.FileTransferManager;
-import org.jivesoftware.smackx.filetransfer.FileTransferNegotiator;
 import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
 import org.jivesoftware.smackx.muc.HostedRoom;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.packet.DiscoverItems;
 
 import java.io.File;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,7 @@ public class XmppUtils {
                     //开始连接
                     MsgService.xmppConnection.connect();
                     listener.Success();
-                } catch (final XMPPException e) {
+                } catch (final Exception e) {
                     e.printStackTrace();
                     mhandler.post(new Runnable() {
                         @Override
@@ -142,13 +143,26 @@ public class XmppUtils {
     }
 
     /**
-     * TODO 功能：获取群列表
+     * TODO 功能：获取服务器群列表
      * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/2
      */
-    public static void XmppRooms(final GroupListener listener) {
+    public static void XmppServiceRooms(final GroupListener listener) {
+        List<HostedRoom> list = new ArrayList<>();
+        try {
+            Collection<HostedRoom> hostrooms = MultiUserChat.getHostedRooms(MsgService.xmppConnection,MsgService.xmppConnection.getServiceName());
+            for (HostedRoom entry : hostrooms) {
+                list.add(entry);
+            }
+            listener.Success(list);
+        } catch (Exception e) {
+            listener.Error(e.getMessage());
+            Log.e("shenl",e.getMessage());
+            e.printStackTrace();
+        }
+
 
     }
 
@@ -234,7 +248,7 @@ public class XmppUtils {
      * 创建时间:   2019/1/2
      */
     public interface GroupListener {
-        void Success(List<Map<String, String>> groupList);
+        void Success(List<HostedRoom> list);
 
         void Error(String error);
     }
