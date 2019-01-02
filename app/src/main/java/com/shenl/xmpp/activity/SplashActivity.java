@@ -11,6 +11,8 @@ import com.shenl.xmpplibrary.utils.XmppUtils;
 
 public class SplashActivity extends BaseActivity {
 
+    public static final String sarviceName = "172.30.4.15";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -22,14 +24,14 @@ public class SplashActivity extends BaseActivity {
 
     @Override
     public void initView() {
-        XmppUtils.XmppConnect(SplashActivity.this, "192.168.99.5", 5222, new XmppUtils.XmppListener() {
+        XmppUtils.XmppConnect(SplashActivity.this, "172.30.4.15", 5222,sarviceName,new XmppUtils.XmppListener() {
             @Override
             public void Success() {
-                boolean b = ServiceUtils.isServiceWork(SplashActivity.this, "com.shenl.xmpplibrary.service.MsgService");
+                /*boolean b = ServiceUtils.isServiceWork(SplashActivity.this, "com.shenl.xmpplibrary.service.MsgService");
                 if (!b) {
                     Intent intent = new Intent(SplashActivity.this, MsgService.class);
                     startService(intent);
-                }
+                }*/
             }
 
             @Override

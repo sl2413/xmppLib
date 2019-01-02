@@ -5,8 +5,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.shenl.xmpplibrary.bean.MsgBean;
 import com.shenl.xmpplibrary.utils.XmppUtils;
+
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.XMPPConnection;
@@ -25,10 +25,7 @@ public class MsgService extends Service {
         XmppUtils.XmppGetMessage(new MessageListener() {
             @Override
             public void processMessage(Chat chat, Message message) {
-                String from = message.getFrom();
-                String to = message.getTo();
-                String body = message.getBody();
-                Log.e("shenl","from="+from+"...to="+to+"...body="+body);
+                Log.e("shenl",message.getBody());
             }
         });
         super.onCreate();

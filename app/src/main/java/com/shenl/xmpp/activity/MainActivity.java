@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.shenl.xmpp.R;
 import com.shenl.xmpplibrary.fragment.ContactsFragment;
+import com.shenl.xmpplibrary.fragment.RoomsFragment;
 import com.shenl.xmpplibrary.fragment.SessionFragment;
 
 import java.util.ArrayList;
@@ -47,6 +48,7 @@ public class MainActivity extends FragmentActivity {
         list = new ArrayList<Fragment>();
         list.add(new SessionFragment());
         list.add(new ContactsFragment());
+        list.add(new RoomsFragment());
         vp.setAdapter(new MyAdapter(getSupportFragmentManager()));
     }
 

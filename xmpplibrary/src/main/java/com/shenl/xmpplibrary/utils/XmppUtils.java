@@ -2,6 +2,7 @@ package com.shenl.xmpplibrary.utils;
 
 import android.content.Context;
 import android.os.Handler;
+import android.util.Log;
 
 import com.shenl.xmpplibrary.service.MsgService;
 
@@ -15,14 +16,29 @@ import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smackx.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.filetransfer.FileTransferManager;
+import org.jivesoftware.smackx.filetransfer.FileTransferNegotiator;
+import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
+import org.jivesoftware.smackx.muc.HostedRoom;
+import org.jivesoftware.smackx.muc.MultiUserChat;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class XmppUtils {
 
     private static Handler mhandler = new Handler();
+    public static String host;
+    public static int port;
+    public static String sName;
+    private static FileTransferManager fileManager;
+
 
     /**
      * TODO : 初始化连联服务器
@@ -32,7 +48,10 @@ public class XmppUtils {
      *
      * @return :
      */
-    public static void XmppConnect(final Context context, final String host, final int port, final XmppListener listener) {
+    public static void XmppConnect(final Context context, final String host, final int port, String sName, final XmppListener listener) {
+        XmppUtils.host = host;
+        XmppUtils.port = port;
+        XmppUtils.sName = sName;
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -40,6 +59,12 @@ public class XmppUtils {
                 try {
                     //创建连接配置对象
                     ConnectionConfiguration config = new ConnectionConfiguration(host, port);
+                    //设置断网重连 默认为true
+                    config.setReconnectionAllowed(true);
+                    //设置登录状态 true-为在线
+                    config.setSendPresence(true);
+                    //设置不需要SAS验证
+                    //config.setSASLAuthenticationEnabled(true);
                     //创建连接
                     MsgService.xmppConnection = new XMPPConnection(config);
                     //开始连接
@@ -117,6 +142,17 @@ public class XmppUtils {
     }
 
     /**
+     * TODO 功能：获取群列表
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/2
+     */
+    public static void XmppRooms(final GroupListener listener) {
+
+    }
+
+    /**
      * TODO 功能：发送消息
      * <p>
      * 参数说明:
@@ -158,6 +194,23 @@ public class XmppUtils {
         });
     }
 
+    /**
+     * TODO 功能：发送文件
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/2
+     */
+    public static void XmppSendFile(String toUser, File file) {
+        FileTransferManager fileTransferManager = new FileTransferManager(MsgService.xmppConnection);
+        OutgoingFileTransfer fileTransfer = fileTransferManager.createOutgoingFileTransfer(toUser);
+        try {
+            fileTransfer.sendFile(file, "Send");
+        } catch (XMPPException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * TODO : 监听器
@@ -169,6 +222,19 @@ public class XmppUtils {
      */
     public interface XmppListener {
         void Success();
+
+        void Error(String error);
+    }
+
+    /**
+     * TODO 功能：
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/2
+     */
+    public interface GroupListener {
+        void Success(List<Map<String, String>> groupList);
 
         void Error(String error);
     }

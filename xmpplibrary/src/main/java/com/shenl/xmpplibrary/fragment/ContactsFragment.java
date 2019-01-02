@@ -72,26 +72,34 @@ public class ContactsFragment extends Fragment {
                     list.clear();
                 }
                 list = XmppUtils.XmppContacts();
-                if (adapter != null){
-                    adapter.notifyDataSetChanged();
-                }else{
-                    adapter = new MyAdapter();
-                }
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (adapter != null){
+                            adapter.notifyDataSetChanged();
+                        }else{
+                            adapter = new MyAdapter();
+                        }
+                    }
+                });
             }
 
             @Override
             public void entriesUpdated(Collection<String> collection) {
                 if (!list.isEmpty()){
-                    Log.e("shenl","清空列表");
                     list.clear();
                 }
                 list = XmppUtils.XmppContacts();
-                if (adapter != null){
-                    Log.e("shenl","刷新列表");
-                    adapter.notifyDataSetChanged();
-                }else{
-                    adapter = new MyAdapter();
-                }
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (adapter != null){
+                            adapter.notifyDataSetChanged();
+                        }else{
+                            adapter = new MyAdapter();
+                        }
+                    }
+                });
             }
 
             @Override
@@ -100,11 +108,16 @@ public class ContactsFragment extends Fragment {
                     list.clear();
                 }
                 list = XmppUtils.XmppContacts();
-                if (adapter != null){
-                    adapter.notifyDataSetChanged();
-                }else{
-                    adapter = new MyAdapter();
-                }
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (adapter != null){
+                            adapter.notifyDataSetChanged();
+                        }else{
+                            adapter = new MyAdapter();
+                        }
+                    }
+                });
             }
 
             @Override
