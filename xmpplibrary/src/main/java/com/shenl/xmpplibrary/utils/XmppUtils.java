@@ -20,7 +20,10 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.MultipleRecipientManager;
 import org.jivesoftware.smackx.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.filetransfer.FileTransferListener;
 import org.jivesoftware.smackx.filetransfer.FileTransferManager;
+import org.jivesoftware.smackx.filetransfer.FileTransferNegotiator;
+import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
 import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.HostedRoom;
@@ -294,15 +297,36 @@ public class XmppUtils {
      * 作    者:   沈 亮
      * 创建时间:   2019/1/2
      */
-    public static void XmppSendFile(String toUser, File file) {
-        FileTransferManager fileTransferManager = new FileTransferManager(MsgService.xmppConnection);
-        OutgoingFileTransfer fileTransfer = fileTransferManager.createOutgoingFileTransfer(toUser);
+    public static void XmppSendFile(String toUser, File file,XmppListener listener) {
         try {
-            fileTransfer.sendFile(file, "Send");
+            FileTransferManager fileTransferManager = new FileTransferManager(MsgService.xmppConnection);
+            OutgoingFileTransfer outfile = fileTransferManager.createOutgoingFileTransfer(toUser);
+            outfile.sendFile(file, "文件来自"+toUser);
+            listener.Success();
         } catch (XMPPException e) {
+            listener.Error(e.getMessage());
             e.printStackTrace();
-            Log.e("shenl",e.getMessage());
         }
+    }
+
+    /**
+     * TODO : 文件接收监听器
+     * 参数说明 :
+     * 作者 : shenl
+     * 创建日期 : 2019/1/3
+     * @return :
+     */
+    public static void XmppGetFile(FileTransferListener listener){
+        ServiceDiscoveryManager sdManager = ServiceDiscoveryManager
+                .getInstanceFor(MsgService.xmppConnection);
+        if (sdManager == null) {
+            sdManager = new ServiceDiscoveryManager(MsgService.xmppConnection);
+        }
+        sdManager.addFeature("http://jabber.org/protocol/disco#info");
+        sdManager.addFeature("jabber:iq:privacy");
+        FileTransferNegotiator.setServiceEnabled(MsgService.xmppConnection, true);
+        fileManager = new FileTransferManager(MsgService.xmppConnection);
+        fileManager.addFileTransferListener(listener);
     }
 
 

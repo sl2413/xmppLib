@@ -25,6 +25,9 @@ import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smackx.filetransfer.FileTransferListener;
+import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
+import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -110,6 +113,7 @@ public class ChatActivity extends Activity {
                 }
             }).start();
         } else {
+            //消息监听器
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -143,6 +147,22 @@ public class ChatActivity extends Activity {
                     });
                 }
             }).start();
+            //文件监听器
+            XmppUtils.XmppGetFile(new FileTransferListener() {
+                @Override
+                public void fileTransferRequest(final FileTransferRequest request) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //文件接收
+                            IncomingFileTransfer transfer = request.accept();
+                            //获取文件名字
+                            String fileName = transfer.getFileName();
+                            Log.e("shenl",fileName);
+                        }
+                    }).start();
+                }
+            });
         }
     }
 
@@ -165,7 +185,17 @@ public class ChatActivity extends Activity {
         Log.d("shenl", "Uri = " + uri);
         String path = ImageUtils.getRealPathFromUri(this, uri);
         Log.d("shenl", "realPath = " + path);
-        XmppUtils.XmppSendFile(user,new File(path));
+        XmppUtils.XmppSendFile(user, new File(path), new XmppUtils.XmppListener() {
+            @Override
+            public void Success() {
+                Log.e("shenl","发送成功");
+            }
+
+            @Override
+            public void Error(String error) {
+                Log.e("shenl","发送失败..."+error);
+            }
+        });
         super.onActivityResult(requestCode, resultCode, data);
     }
 
