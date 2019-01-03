@@ -23,12 +23,12 @@ public class MsgService extends Service {
 
     @Override
     public void onCreate() {
-        /*XmppUtils.XmppGetMessage(new MessageListener() {
+        XmppUtils.XmppGetMessage(new MessageListener() {
             @Override
             public void processMessage(Chat chat, Message message) {
                 Log.e("shenl",message.getBody());
             }
-        });*/
+        });
         super.onCreate();
     }
 

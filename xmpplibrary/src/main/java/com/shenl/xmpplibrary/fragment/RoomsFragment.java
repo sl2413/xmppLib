@@ -60,25 +60,34 @@ public class RoomsFragment extends Fragment {
         //列表点击事件
         lv_room.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                XmppUtils.XmppJoinRoom(MsgService.nickname,"",Glist.get(position).getName());
-                Intent intent = new Intent(getContext(), ChatActivity.class);
-                intent.putExtra("user",Glist.get(position).getJid());
-                intent.putExtra("name",Glist.get(position).getName());
-                intent.putExtra("isGroup",true);
-                getContext().startActivity(intent);
+            public void onItemClick(AdapterView<?> adapterView, View view, final int position, long l) {
+                XmppUtils.XmppJoinRoom(MsgService.nickname, "", Glist.get(position).getName(), new XmppUtils.XmppListener() {
+                    @Override
+                    public void Success() {
+                        Intent intent = new Intent(getContext(), ChatActivity.class);
+                        intent.putExtra("user", Glist.get(position).getJid());
+                        intent.putExtra("name", Glist.get(position).getName());
+                        intent.putExtra("isGroup", true);
+                        getContext().startActivity(intent);
+                    }
+
+                    @Override
+                    public void Error(String error) {
+                        Log.e("shenl", error);
+                    }
+                });
             }
         });
     }
 
     /**
      * TODO 功能：群列表适配器
-     *
+     * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/3
      */
-    class MyAdapter extends BaseAdapter{
+    class MyAdapter extends BaseAdapter {
 
         @Override
         public int getCount() {

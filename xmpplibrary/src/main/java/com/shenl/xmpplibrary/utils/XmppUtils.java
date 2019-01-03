@@ -162,8 +162,7 @@ public class XmppUtils {
             for (HostedRoom host : MultiUserChat.getHostedRooms(MsgService.xmppConnection, MsgService.xmppConnection.getServiceName())) {
                 //遍历某个人所创建的群
                 for (HostedRoom singleHost : MultiUserChat.getHostedRooms(MsgService.xmppConnection, host.getJid())) {
-                    RoomInfo info = MultiUserChat.getRoomInfo(MsgService.xmppConnection,
-                            singleHost.getJid());
+                    RoomInfo info = MultiUserChat.getRoomInfo(MsgService.xmppConnection,singleHost.getJid());
                     if (singleHost.getJid().indexOf("@") > 0) {
                         list.add(singleHost);
                     }
@@ -229,7 +228,7 @@ public class XmppUtils {
      * 作    者:   沈 亮
      * 创建时间:   2019/1/3
      */
-    public static void XmppJoinRoom(String nickname, String password, String roomName) {
+    public static void XmppJoinRoom(String nickname, String password, String roomName,XmppListener listener) {
         try {
             // 使用XMPPConnection创建一个MultiUserChat窗口
             muc = new MultiUserChat(MsgService.xmppConnection, roomName
@@ -240,12 +239,23 @@ public class XmppUtils {
             //history.setSince(new Date());
             // 用户加入聊天室
             muc.join(nickname, password, history, SmackConfiguration.getPacketReplyTimeout());
-            Log.e("shenl", "会议室加入成功........");
+            listener.Success();
         } catch (XMPPException e) {
-            e.printStackTrace();
-            Log.e("shenl", "会议室加入失败........");
+            listener.Error(e.getMessage());
             muc = null;
         }
+    }
+
+    /**
+     * TODO 功能：获取加入过的群
+     *
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/3
+     */
+    public static void XmppGetJoinRooms(){
+        Iterator<String> joinedRooms = MultiUserChat.getJoinedRooms(MsgService.xmppConnection, MsgService.xmppConnection.getServiceName());
+
     }
 
     /**
