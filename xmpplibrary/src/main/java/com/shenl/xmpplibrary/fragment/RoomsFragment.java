@@ -1,5 +1,6 @@
 package com.shenl.xmpplibrary.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -7,13 +8,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.shenl.xmpplibrary.R;
+import com.shenl.xmpplibrary.activiity.ChatActivity;
+import com.shenl.xmpplibrary.service.MsgService;
 import com.shenl.xmpplibrary.utils.XmppUtils;
+
 import org.jivesoftware.smackx.muc.HostedRoom;
+
 import java.util.List;
 
 public class RoomsFragment extends Fragment {
@@ -51,9 +57,27 @@ public class RoomsFragment extends Fragment {
     }
 
     private void initEvent() {
-
+        //列表点击事件
+        lv_room.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                XmppUtils.XmppJoinRoom(MsgService.nickname,"",Glist.get(position).getName());
+                Intent intent = new Intent(getContext(), ChatActivity.class);
+                intent.putExtra("user",Glist.get(position).getJid());
+                intent.putExtra("name",Glist.get(position).getName());
+                intent.putExtra("isGroup",true);
+                getContext().startActivity(intent);
+            }
+        });
     }
 
+    /**
+     * TODO 功能：群列表适配器
+     *
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/3
+     */
     class MyAdapter extends BaseAdapter{
 
         @Override
@@ -77,7 +101,9 @@ public class RoomsFragment extends Fragment {
                 convertView = View.inflate(getContext(), R.layout.item_room, null);
             }
             TextView tv_roomName = convertView.findViewById(R.id.tv_roomName);
+            TextView tv_Jid = convertView.findViewById(R.id.tv_Jid);
             tv_roomName.setText(Glist.get(position).getName());
+            tv_Jid.setText(Glist.get(position).getJid());
             return convertView;
         }
     }

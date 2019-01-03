@@ -11,8 +11,10 @@ import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
@@ -20,14 +22,17 @@ import org.jivesoftware.smackx.MultipleRecipientManager;
 import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.filetransfer.FileTransferManager;
 import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
+import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.HostedRoom;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.packet.DiscoverItems;
 
 import java.io.File;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +44,7 @@ public class XmppUtils {
     public static int port;
     public static String sName;
     private static FileTransferManager fileManager;
+    private static MultiUserChat muc;
 
 
     /**
@@ -65,7 +71,7 @@ public class XmppUtils {
                     //设置登录状态 true-为在线
                     config.setSendPresence(true);
                     //设置不需要SAS验证
-                    //config.setSASLAuthenticationEnabled(true);
+//                    config.setSASLAuthenticationEnabled(false);
                     //创建连接
                     MsgService.xmppConnection = new XMPPConnection(config);
                     //开始连接
@@ -152,28 +158,31 @@ public class XmppUtils {
     public static void XmppServiceRooms(final GroupListener listener) {
         List<HostedRoom> list = new ArrayList<>();
         try {
-            Collection<HostedRoom> hostrooms = MultiUserChat.getHostedRooms(MsgService.xmppConnection,MsgService.xmppConnection.getServiceName());
-            for (HostedRoom entry : hostrooms) {
-                list.add(entry);
+            //遍历每个人所创建的群
+            for (HostedRoom host : MultiUserChat.getHostedRooms(MsgService.xmppConnection, MsgService.xmppConnection.getServiceName())) {
+                //遍历某个人所创建的群
+                for (HostedRoom singleHost : MultiUserChat.getHostedRooms(MsgService.xmppConnection, host.getJid())) {
+                    RoomInfo info = MultiUserChat.getRoomInfo(MsgService.xmppConnection,
+                            singleHost.getJid());
+                    if (singleHost.getJid().indexOf("@") > 0) {
+                        list.add(singleHost);
+                    }
+                }
             }
             listener.Success(list);
-        } catch (Exception e) {
-            listener.Error(e.getMessage());
-            Log.e("shenl",e.getMessage());
+        } catch (XMPPException e) {
             e.printStackTrace();
         }
-
-
     }
 
     /**
-     * TODO 功能：发送消息
+     * TODO 功能：发送单聊消息
      * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2018/12/29
      */
-    public static void XmppSendMessage(String toUserID, Message msg, XmppListener listener) {
+    public static void XmppSendMessage(final String toUserID, final Message msg, final XmppListener listener) {
         //获取消息管理类
         ChatManager chatMan = MsgService.xmppConnection.getChatManager();
         //创建消息对象 参数（用户名称，MessageListener消息监听）
@@ -182,7 +191,7 @@ public class XmppUtils {
             // 发送消息
             newchat.sendMessage(msg);
             listener.Success();
-        } catch (XMPPException e) {
+        } catch (final XMPPException e) {
             e.printStackTrace();
             listener.Error(e.getMessage());
         }
@@ -201,11 +210,71 @@ public class XmppUtils {
         //添加聊天监听
         chatMan.addChatListener(new ChatManagerListener() {
             @Override
-            public void chatCreated(Chat chat, boolean able) {
-                // 添加消息监听
-                chat.addMessageListener(listener);
+            public void chatCreated(final Chat chat, boolean able) {
+                mhandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 添加消息监听
+                        chat.addMessageListener(listener);
+                    }
+                });
             }
         });
+    }
+
+    /**
+     * TODO 功能：加入群聊
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/3
+     */
+    public static void XmppJoinRoom(String nickname, String password, String roomName) {
+        try {
+            // 使用XMPPConnection创建一个MultiUserChat窗口
+            muc = new MultiUserChat(MsgService.xmppConnection, roomName
+                    + "@conference." + MsgService.xmppConnection.getServiceName());
+            // 聊天室服务将会决定要接受的历史记录数量
+            DiscussionHistory history = new DiscussionHistory();
+            history.setMaxStanzas(0);
+            //history.setSince(new Date());
+            // 用户加入聊天室
+            muc.join(nickname, password, history, SmackConfiguration.getPacketReplyTimeout());
+            Log.e("shenl", "会议室加入成功........");
+        } catch (XMPPException e) {
+            e.printStackTrace();
+            Log.e("shenl", "会议室加入失败........");
+            muc = null;
+        }
+    }
+
+    /**
+     * TODO 功能：发送群聊消息
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/3
+     */
+    public static void XmppSendGroupMessage(String msg, XmppListener listener) {
+        try {
+            muc.sendMessage(msg);
+            listener.Success();
+        } catch (XMPPException e) {
+            listener.Error(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * TODO 功能：获取当前群组发来的消息
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/3
+     */
+    public static void XmppGroupMessage(final PacketListener listener) {
+        // 使用XMPPConnection创建一个MultiUserChat窗口
+        muc.addMessageListener(listener);
     }
 
     /**

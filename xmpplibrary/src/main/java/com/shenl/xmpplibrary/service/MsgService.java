@@ -15,6 +15,7 @@ import org.jivesoftware.smack.packet.Message;
 public class MsgService extends Service {
 
     public static XMPPConnection xmppConnection;
+    public static String nickname;
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -22,12 +23,12 @@ public class MsgService extends Service {
 
     @Override
     public void onCreate() {
-        XmppUtils.XmppGetMessage(new MessageListener() {
+        /*XmppUtils.XmppGetMessage(new MessageListener() {
             @Override
             public void processMessage(Chat chat, Message message) {
                 Log.e("shenl",message.getBody());
             }
-        });
+        });*/
         super.onCreate();
     }
 

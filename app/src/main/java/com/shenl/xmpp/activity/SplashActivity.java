@@ -24,7 +24,7 @@ public class SplashActivity extends BaseActivity {
 
     @Override
     public void initView() {
-        XmppUtils.XmppConnect(SplashActivity.this, "192.168.99.5", 5222,sarviceName,new XmppUtils.XmppListener() {
+        XmppUtils.XmppConnect(SplashActivity.this, sarviceName, 5222,sarviceName,new XmppUtils.XmppListener() {
             @Override
             public void Success() {
                 boolean b = ServiceUtils.isServiceWork(SplashActivity.this, "com.shenl.xmpplibrary.service.MsgService");

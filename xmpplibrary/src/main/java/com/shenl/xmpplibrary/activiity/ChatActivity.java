@@ -1,16 +1,8 @@
 package com.shenl.xmpplibrary.activiity;
 
 import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -20,7 +12,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.MsgBean;
@@ -29,18 +20,10 @@ import com.shenl.xmpplibrary.utils.XmppUtils;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smackx.ServiceDiscoveryManager;
-import org.jivesoftware.smackx.filetransfer.FileTransfer;
-import org.jivesoftware.smackx.filetransfer.FileTransferManager;
-import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
-import org.jivesoftware.smackx.packet.StreamInitiation;
+import org.jivesoftware.smack.packet.Packet;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,6 +36,7 @@ public class ChatActivity extends Activity {
     private List<MsgBean> list;
     private MyAdapter adapter;
     private String name;
+    private boolean isGroup;
 
 
     @Override
@@ -73,13 +57,18 @@ public class ChatActivity extends Activity {
 
     private void initData() {
         Intent intent = getIntent();
+        isGroup = intent.getBooleanExtra("isGroup", false);
         user = intent.getStringExtra("user");
         if (user.indexOf("@") == -1) {
             user = user + "@" + XmppUtils.sName;
         }
         name = intent.getStringExtra("name");
-        // 设置title
-        title.setText("与 " + name + " 聊天中");
+        if (isGroup) {
+            title.setText("在" + name + " 聊天室");
+        } else {
+            title.setText("与 " + name + " 聊天中");
+        }
+
         list = new ArrayList<>();
         adapter = new MyAdapter();
         listview.setAdapter(adapter);
@@ -87,34 +76,71 @@ public class ChatActivity extends Activity {
 
 
     private void initEvent() {
-        XmppUtils.XmppGetMessage(new MessageListener() {
-            @Override
-            public void processMessage(Chat chat, Message message) {
-                String from = message.getFrom().substring(0, message.getFrom().indexOf("@"));
-                String to = message.getTo();
-                String body = message.getBody();
-                String account = "";
-                if (user.indexOf("@") != -1) {
-                    account = user.substring(0, user.indexOf("@"));
-                } else {
-                    account = user;
-                }
-                if (!TextUtils.isEmpty(body) && from.equals(account)) {
-                    MsgBean msgBean = new MsgBean();
-                    msgBean.body = body;
-                    msgBean.type = "1";
-                    list.add(msgBean);
-                    runOnUiThread(new Runnable() {
+        if (isGroup) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    XmppUtils.XmppGroupMessage(new PacketListener() {
                         @Override
-                        public void run() {
-                            adapter.notifyDataSetChanged();
+                        public void processPacket(Packet packet) {
+                            Message message = (Message) packet;
+                            // 接收来自聊天室的聊天信息
+                            String groupName = message.getFrom();
+                            //判断是否是本人发出的消息 不是则显示
+                            if (!groupName.contains(MsgService.nickname)) {
+                                Log.e("shenl", "from=" + message.getFrom() + "...to=" + message.getTo());
+                                Log.e("shenl", message.getBody());
+                                MsgBean msgBean = new MsgBean();
+                                msgBean.body = message.getBody();
+                                msgBean.type = "1";
+                                list.add(msgBean);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        adapter.notifyDataSetChanged();
+                                        listview.smoothScrollToPosition(list.size() - 1);
+                                    }
+                                });
+                            }
                         }
                     });
-                    Log.e("shenl", "from=" + from + "...to=" + to);
-                    listview.smoothScrollToPosition(list.size() - 1);
                 }
-            }
-        });
+            }).start();
+        } else {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    XmppUtils.XmppGetMessage(new MessageListener() {
+                        @Override
+                        public void processMessage(Chat chat, Message message) {
+                            final String from = message.getFrom().substring(0, message.getFrom().indexOf("@"));
+                            final String to = message.getTo();
+                            String body = message.getBody();
+                            String account = "";
+                            if (user.indexOf("@") != -1) {
+                                account = user.substring(0, user.indexOf("@"));
+                            } else {
+                                account = user;
+                            }
+                            if (!TextUtils.isEmpty(body) && from.equals(account)) {
+                                MsgBean msgBean = new MsgBean();
+                                msgBean.body = body;
+                                msgBean.type = "1";
+                                list.add(msgBean);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        adapter.notifyDataSetChanged();
+                                        Log.e("shenl", "from11=" + from + "...to11=" + to);
+                                        listview.smoothScrollToPosition(list.size() - 1);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }).start();
+        }
     }
 
     /**
@@ -141,28 +167,64 @@ public class ChatActivity extends Activity {
      */
     public void send(View v) {
         final String body = et_body.getText().toString().trim();
-        Message msg = new Message();
+        final Message msg = new Message();
         msg.setTo(user);
         msg.setBody(body);// 输入框里面的内容
-        msg.setType(Message.Type.chat);// 类型就是chat
+
+        if (isGroup) {
+            XmppUtils.XmppSendGroupMessage(body, new XmppUtils.XmppListener() {
+                @Override
+                public void Success() {
+                    MsgBean msgBean = new MsgBean();
+                    msgBean.body = body;
+                    msgBean.type = "0";
+                    list.add(msgBean);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            adapter.notifyDataSetChanged();
+                            et_body.setText("");
+                            listview.smoothScrollToPosition(list.size() - 1);
+                        }
+                    });
+                }
+
+                @Override
+                public void Error(String error) {
+
+                }
+            });
+        } else {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    msg.setType(Message.Type.chat);// 类型就是chat
 //		msg.setProperty("key", "value");// 额外属性-->额外的信息,这里我们用不到
-        XmppUtils.XmppSendMessage(user, msg, new XmppUtils.XmppListener() {
-            @Override
-            public void Success() {
-                MsgBean msgBean = new MsgBean();
-                msgBean.body = body;
-                msgBean.type = "0";
-                list.add(msgBean);
-                adapter.notifyDataSetChanged();
-                et_body.setText("");
-                listview.smoothScrollToPosition(list.size() - 1);
-            }
+                    XmppUtils.XmppSendMessage(user, msg, new XmppUtils.XmppListener() {
+                        @Override
+                        public void Success() {
+                            MsgBean msgBean = new MsgBean();
+                            msgBean.body = body;
+                            msgBean.type = "0";
+                            list.add(msgBean);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    adapter.notifyDataSetChanged();
+                                    et_body.setText("");
+                                    listview.smoothScrollToPosition(list.size() - 1);
+                                }
+                            });
+                        }
 
-            @Override
-            public void Error(String error) {
+                        @Override
+                        public void Error(String error) {
 
-            }
-        });
+                        }
+                    });
+                }
+            }).start();
+        }
     }
 
 

@@ -9,6 +9,7 @@ import android.widget.EditText;
 import com.shenl.utils.MyUtils.PageUtils;
 import com.shenl.utils.activity.BaseActivity;
 import com.shenl.xmpp.R;
+import com.shenl.xmpplibrary.service.MsgService;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
 public class LoginActivity extends BaseActivity {
@@ -63,6 +64,7 @@ public class LoginActivity extends BaseActivity {
                 XmppUtils.XmppLogin(LoginActivity.this, name, pswd, new XmppUtils.XmppListener() {
                     @Override
                     public void Success() {
+                        MsgService.nickname = name;
                         openActivity(MainActivity.class);
                         finish();
                     }
