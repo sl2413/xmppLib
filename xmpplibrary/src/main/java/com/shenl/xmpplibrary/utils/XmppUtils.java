@@ -301,6 +301,7 @@ public class XmppUtils {
             fileTransfer.sendFile(file, "Send");
         } catch (XMPPException e) {
             e.printStackTrace();
+            Log.e("shenl",e.getMessage());
         }
     }
 

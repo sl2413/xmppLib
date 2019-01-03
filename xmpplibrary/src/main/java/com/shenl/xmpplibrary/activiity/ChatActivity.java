@@ -2,6 +2,7 @@ package com.shenl.xmpplibrary.activiity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -16,6 +17,7 @@ import android.widget.TextView;
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.MsgBean;
 import com.shenl.xmpplibrary.service.MsgService;
+import com.shenl.xmpplibrary.utils.ImageUtils;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
 import org.jivesoftware.smack.Chat;
@@ -24,6 +26,7 @@ import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -151,12 +154,20 @@ public class ChatActivity extends Activity {
      * 创建时间:   2019/1/2
      */
     public void SendFile(View v) {
-        Intent intent = new Intent();
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(intent, 0);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Uri uri =  data.getData();
+        Log.d("shenl", "Uri = " + uri);
+        String path = ImageUtils.getRealPathFromUri(this, uri);
+        Log.d("shenl", "realPath = " + path);
+        XmppUtils.XmppSendFile(user,new File(path));
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
     /**
      * TODO 功能：发送按钮点击事件
