@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 
+import com.shenl.xmpplibrary.bean.Msg;
 import com.shenl.xmpplibrary.service.MsgService;
 
 import org.jivesoftware.smack.Chat;
@@ -20,6 +21,7 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.MultipleRecipientManager;
 import org.jivesoftware.smackx.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.filetransfer.FileTransfer;
 import org.jivesoftware.smackx.filetransfer.FileTransferListener;
 import org.jivesoftware.smackx.filetransfer.FileTransferManager;
 import org.jivesoftware.smackx.filetransfer.FileTransferNegotiator;
@@ -300,9 +302,28 @@ public class XmppUtils {
     public static void XmppSendFile(String toUser, File file,XmppListener listener) {
         try {
             FileTransferManager fileTransferManager = new FileTransferManager(MsgService.xmppConnection);
+            if (file.exists() == false) {
+                return;
+            }
             OutgoingFileTransfer outfile = fileTransferManager.createOutgoingFileTransfer(toUser);
             outfile.sendFile(file, "文件来自"+toUser);
-            listener.Success();
+            while (!outfile.isDone()) {
+                if (outfile.getStatus().equals(FileTransfer.Status.error)) {
+                    Log.e("shenl","ERROR!!! " + outfile.getError());
+                } else {
+                    Log.e("shenl","Status="+outfile.getStatus());
+                    Log.e("shenl","Progress="+outfile.getProgress());
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            //文件发送完毕
+            if (outfile.isDone()) {
+                listener.Success();
+            }
         } catch (XMPPException e) {
             listener.Error(e.getMessage());
             e.printStackTrace();

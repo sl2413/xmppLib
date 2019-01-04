@@ -3,10 +3,13 @@ package com.shenl.xmpplibrary.activiity;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
@@ -37,15 +40,20 @@ import com.shenl.xmpplibrary.utils.XmppUtils;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smackx.filetransfer.FileTransfer;
+import org.jivesoftware.smackx.filetransfer.FileTransferListener;
+import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
+import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class ChatActivity extends FragmentActivity implements ExpressionGridFragment.ExpressionClickListener,ExpressionGridFragment.ExpressionDeleteClickListener {
+public class ChatActivity extends FragmentActivity implements ExpressionGridFragment.ExpressionClickListener, ExpressionGridFragment.ExpressionDeleteClickListener {
 
     private ListView listview;
     private ExpressionEditText et_body;
@@ -59,6 +67,8 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
     private boolean keyboardShown;
     private int supportSoftInputHeight;
     private ExpressionShowFragment expressionShowFragment;
+    private final static String Folder = "/Xmpp";
+    private final static String ALBUM_PATH = Environment.getExternalStorageState()+Folder;
     private Handler handler = new Handler() {
         public void handleMessage(android.os.Message msg) {
             String[] args = (String[]) msg.obj;
@@ -69,6 +79,21 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                     list.add(m);
                     adapter.notifyDataSetChanged();
                     listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
+                    break;
+                case 2:
+                    String dateStr2 = DateTimeUtils.formatDate(new Date());
+                    Msg m2 = new Msg(dateStr2, args[0], "", "IN", args[1]);
+                    list.add(m2);
+                    adapter.notifyDataSetChanged();
+                    listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
+                    break;
+                case 3:
+                    String dateStr3 = DateTimeUtils.formatDate(new Date());
+                    Msg m3 = new Msg(dateStr3, args[0], "", "OUT", args[1]);
+                    list.add(m3);
+                    adapter.notifyDataSetChanged();
+                    listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
+
                     break;
             }
         }
@@ -120,6 +145,12 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
 
 
     private void initEvent() {
+        ll_root.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                hideKeyboard(ChatActivity.this);
+            }
+        });
         setListenerToRootView();
         et_body.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -144,6 +175,49 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                     iv_emogi.setImageResource(R.drawable.fabu_keyboard_icon);
                     replaceEmogi();
                     hideKeyboard(ChatActivity.this);
+                }
+            }
+        });
+        XmppUtils.XmppGetFile(new FileTransferListener() {
+            @Override
+            public void fileTransferRequest(FileTransferRequest request) {
+                //文件接收
+                IncomingFileTransfer transfer = request.accept();
+                //获取文件名字
+                String fileName = transfer.getFileName();
+                //本地创建文件
+                File sdCardDir = new File(getCacheDir().getPath()+"/xmpp");
+                if (!sdCardDir.exists()) {//判断文件夹目录是否存在
+                    sdCardDir.mkdir();//如果不存在则创建
+                }
+                String save_path = sdCardDir +"/"+ fileName;
+                File file = new File(save_path);
+                //接收文件
+                try {
+                    transfer.recieveFile(file);
+                    while (!transfer.isDone()) {
+                        if (transfer.getStatus().equals(FileTransfer.Status.error)) {
+                            System.out.println("ERROR!!! " + transfer.getError());
+                        } else {
+                            System.out.println(transfer.getStatus());
+                            System.out.println(transfer.getProgress());
+                        }
+                        try {
+                            Thread.sleep(1000L);
+                        } catch (Exception e) {
+                        }
+                    }
+                    //判断是否完全接收文件
+                    if (transfer.isDone()) {
+                        String[] args = new String[]{name, save_path};
+                        android.os.Message msg = handler.obtainMessage();
+                        msg.what = 2;
+                        msg.obj = args;
+                        //发送msg,刷新adapter显示图片
+                        msg.sendToTarget();
+                    }
+                } catch (XMPPException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -196,20 +270,28 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
      * 创建时间:   2019/1/2
      */
     public void SendFile(View v) {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        Intent intent = new Intent();
         intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(intent, 0);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (data == null) {
+            return;
+        }
         Uri uri = data.getData();
-        Log.d("shenl", "Uri = " + uri);
-        String path = ImageUtils.getRealPathFromUri(this, uri);
+        final String path = ImageUtils.getRealPathFromUri(this, uri);
         Log.d("shenl", "realPath = " + path);
         XmppUtils.XmppSendFile(user, new File(path), new XmppUtils.XmppListener() {
             @Override
             public void Success() {
+                String[] args = new String[]{MsgService.nickname, path};
+                android.os.Message msg = handler.obtainMessage();
+                msg.what = 3;
+                msg.obj = args;
+                msg.sendToTarget();
                 Log.e("shenl", "发送成功");
             }
 
@@ -318,7 +400,7 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
 
     /**
      * TODO 功能：判断键盘弹出状态
-     *
+     * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/4
@@ -334,7 +416,7 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
 
     /**
      * TODO 功能：动态监听键盘状态
-     *
+     * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/4
@@ -378,6 +460,7 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
         }
         return softInputHeight;
     }
+
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private int getSoftButtonsBarHeight() {
         DisplayMetrics metrics = new DisplayMetrics();
@@ -460,6 +543,8 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                 } else {
                     holder.tvTitle.setVisibility(View.GONE);
                     holder.iv_left.setVisibility(View.VISIBLE);
+                    Bitmap bitmap = BitmapFactory.decodeFile(msg.getImg_path());
+                    holder.iv_left.setImageBitmap(bitmap);
 //                    Glide.with(ChatActivity.this).load(ALBUM_PATH + msg.getImg_path()).into(holder.iv_left);
                 }
             } else if (myself.equals("OUT")) {
@@ -473,6 +558,8 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                 } else {
                     holder.tvTitle2.setVisibility(View.GONE);
                     holder.iv_right.setVisibility(View.VISIBLE);
+                    Bitmap bitmap = BitmapFactory.decodeFile(msg.getImg_path());
+                    holder.iv_right.setImageBitmap(bitmap);
 //                    Glide.with(ChatActivity.this).load(msg.getImg_path()).into(holder.iv_right);
                 }
             }
