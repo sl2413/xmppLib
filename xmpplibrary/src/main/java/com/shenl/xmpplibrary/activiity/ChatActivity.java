@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -269,6 +270,12 @@ public class ChatActivity extends Activity {
     }
 
 
+    class MyHodler{
+        RelativeLayout rec, send;
+        ImageView rec_head,send_head;
+        TextView rec_body,send_body;
+    }
+
     /**
      * TODO : 聊天适配器
      * 参数说明 :
@@ -278,6 +285,8 @@ public class ChatActivity extends Activity {
      * @return :
      */
     class MyAdapter extends BaseAdapter {
+
+        private MyHodler hodler;
 
         @Override
         public int getCount() {
@@ -298,17 +307,22 @@ public class ChatActivity extends Activity {
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
                 convertView = View.inflate(ChatActivity.this, R.layout.item_chat, null);
+                hodler = new MyHodler();
+                hodler.rec = convertView.findViewById(R.id.rec);
+                hodler.send = convertView.findViewById(R.id.send);
+                hodler.rec_body = convertView.findViewById(R.id.rec_body);
+                hodler.send_body = convertView.findViewById(R.id.send_body);
+                convertView.setTag(hodler);
+            }else{
+                hodler = (MyHodler) convertView.getTag();
             }
-            RelativeLayout rec = convertView.findViewById(R.id.rec);
-            RelativeLayout send = convertView.findViewById(R.id.send);
-            TextView rec_body = convertView.findViewById(R.id.rec_body);
-            TextView send_body = convertView.findViewById(R.id.send_body);
+
             if ("0".equals(list.get(position).type)) {
-                rec.setVisibility(View.GONE);
-                send_body.setText(list.get(position).body);
+                hodler.rec.setVisibility(View.GONE);
+                hodler.send_body.setText(list.get(position).body);
             } else {
-                send.setVisibility(View.GONE);
-                rec_body.setText(list.get(position).body);
+                hodler.send.setVisibility(View.GONE);
+                hodler.rec_body.setText(list.get(position).body);
             }
             return convertView;
         }
