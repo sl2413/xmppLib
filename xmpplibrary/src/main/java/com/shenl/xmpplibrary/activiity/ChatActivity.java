@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -11,13 +12,16 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.shenl.xmpplibrary.R;
+import com.shenl.xmpplibrary.bean.Msg;
 import com.shenl.xmpplibrary.bean.MsgBean;
 import com.shenl.xmpplibrary.service.MsgService;
+import com.shenl.xmpplibrary.utils.DateTimeUtils;
 import com.shenl.xmpplibrary.utils.ImageUtils;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
@@ -32,6 +36,7 @@ import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class ChatActivity extends Activity {
@@ -40,10 +45,25 @@ public class ChatActivity extends Activity {
     private EditText et_body;
     private TextView title;
     private String user;
-    private List<MsgBean> list;
+    private List<Msg> list;
     private MyAdapter adapter;
     private String name;
     private boolean isGroup;
+    private Handler handler = new Handler() {
+        public void handleMessage(android.os.Message msg) {
+            String[] args = (String[]) msg.obj;
+            switch (msg.what) {
+                case 1:
+                    String dateStr = DateTimeUtils.formatDate(new Date());
+                    Msg m = new Msg(dateStr, args[0], args[1], "IN");
+                    list.add(m);
+                    adapter.notifyDataSetChanged();
+                    listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
+                    break;
+            }
+
+        }
+    };
 
 
     @Override
@@ -84,84 +104,24 @@ public class ChatActivity extends Activity {
 
     private void initEvent() {
         if (isGroup) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    XmppUtils.XmppGroupMessage(new PacketListener() {
-                        @Override
-                        public void processPacket(Packet packet) {
-                            Message message = (Message) packet;
-                            // 接收来自聊天室的聊天信息
-                            String groupName = message.getFrom();
-                            //判断是否是本人发出的消息 不是则显示
-                            if (!groupName.contains(MsgService.nickname)) {
-                                Log.e("shenl", "from=" + message.getFrom() + "...to=" + message.getTo());
-                                Log.e("shenl", message.getBody());
-                                MsgBean msgBean = new MsgBean();
-                                msgBean.body = message.getBody();
-                                msgBean.type = "1";
-                                list.add(msgBean);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        adapter.notifyDataSetChanged();
-                                        listview.smoothScrollToPosition(list.size() - 1);
-                                    }
-                                });
-                            }
-                        }
-                    });
-                }
-            }).start();
+
         } else {
             //消息监听器
-            new Thread(new Runnable() {
+            XmppUtils.XmppGetMessage(new MessageListener() {
                 @Override
-                public void run() {
-                    XmppUtils.XmppGetMessage(new MessageListener() {
-                        @Override
-                        public void processMessage(Chat chat, Message message) {
-                            final String from = message.getFrom().substring(0, message.getFrom().indexOf("@"));
-                            final String to = message.getTo();
-                            String body = message.getBody();
-                            String account = "";
-                            if (user.indexOf("@") != -1) {
-                                account = user.substring(0, user.indexOf("@"));
-                            } else {
-                                account = user;
-                            }
-                            if (!TextUtils.isEmpty(body) && from.equals(account)) {
-                                MsgBean msgBean = new MsgBean();
-                                msgBean.body = body;
-                                msgBean.type = "1";
-                                list.add(msgBean);
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        adapter.notifyDataSetChanged();
-                                        Log.e("shenl", "from11=" + from + "...to11=" + to);
-                                        listview.smoothScrollToPosition(list.size() - 1);
-                                    }
-                                });
-                            }
-                        }
-                    });
-                }
-            }).start();
-            //文件监听器
-            XmppUtils.XmppGetFile(new FileTransferListener() {
-                @Override
-                public void fileTransferRequest(final FileTransferRequest request) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            //文件接收
-                            IncomingFileTransfer transfer = request.accept();
-                            //获取文件名字
-                            String fileName = transfer.getFileName();
-                            Log.e("shenl",fileName);
-                        }
-                    }).start();
+                public void processMessage(Chat chat, Message message) {
+                    Log.e("shenl",message.getBody());
+                    // 获取自己好友发来的信息
+                        if (message.getBody().length() > 0) {
+                            // 获取用户、消息、时间、IN
+                            String from = message.getFrom().substring(0, message.getFrom().indexOf("@"));
+                            String[] args = new String[]{from, message.getBody()};
+                            // 在handler里取出来显示消息
+                            android.os.Message msg = handler.obtainMessage();
+                            msg.what = 1;
+                            msg.obj = args;
+                            msg.sendToTarget();
+                    }
                 }
             });
         }
@@ -182,19 +142,19 @@ public class ChatActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Uri uri =  data.getData();
+        Uri uri = data.getData();
         Log.d("shenl", "Uri = " + uri);
         String path = ImageUtils.getRealPathFromUri(this, uri);
         Log.d("shenl", "realPath = " + path);
         XmppUtils.XmppSendFile(user, new File(path), new XmppUtils.XmppListener() {
             @Override
             public void Success() {
-                Log.e("shenl","发送成功");
+                Log.e("shenl", "发送成功");
             }
 
             @Override
             public void Error(String error) {
-                Log.e("shenl","发送失败..."+error);
+                Log.e("shenl", "发送失败..." + error);
             }
         });
         super.onActivityResult(requestCode, resultCode, data);
@@ -209,54 +169,21 @@ public class ChatActivity extends Activity {
      */
     public void send(View v) {
         final String body = et_body.getText().toString().trim();
-        final Message msg = new Message();
-        msg.setTo(user);
-        msg.setBody(body);// 输入框里面的内容
-
+        String dateStr = DateTimeUtils.formatDate(new Date());
         if (isGroup) {
-            XmppUtils.XmppSendGroupMessage(body, new XmppUtils.XmppListener() {
-                @Override
-                public void Success() {
-                    MsgBean msgBean = new MsgBean();
-                    msgBean.body = body;
-                    msgBean.type = "0";
-                    list.add(msgBean);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            adapter.notifyDataSetChanged();
-                            et_body.setText("");
-                            listview.smoothScrollToPosition(list.size() - 1);
-                        }
-                    });
-                }
 
-                @Override
-                public void Error(String error) {
-
-                }
-            });
         } else {
+            final Message msg = new Message();
+            msg.setBody(body);// 输入框里面的内容
+//            msg.setType(Message.Type.chat);// 类型就是chat
+            //msg.setProperty("key", "value");// 额外属性-->额外的信息,这里我们用不到
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    msg.setType(Message.Type.chat);// 类型就是chat
-//		msg.setProperty("key", "value");// 额外属性-->额外的信息,这里我们用不到
                     XmppUtils.XmppSendMessage(user, msg, new XmppUtils.XmppListener() {
                         @Override
                         public void Success() {
-                            MsgBean msgBean = new MsgBean();
-                            msgBean.body = body;
-                            msgBean.type = "0";
-                            list.add(msgBean);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    adapter.notifyDataSetChanged();
-                                    et_body.setText("");
-                                    listview.smoothScrollToPosition(list.size() - 1);
-                                }
-                            });
+
                         }
 
                         @Override
@@ -267,13 +194,19 @@ public class ChatActivity extends Activity {
                 }
             }).start();
         }
+        // 发送消息
+        list.add(new Msg(dateStr, MsgService.nickname, body, "OUT"));
+        // 刷新适配器
+        adapter.notifyDataSetChanged();
+        listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
+        et_body.setText("");
     }
 
 
-    class MyHodler{
+    class MyHodler {
         RelativeLayout rec, send;
-        ImageView rec_head,send_head;
-        TextView rec_body,send_body;
+        ImageView rec_head, send_head;
+        TextView rec_body, send_body;
     }
 
     /**
@@ -295,36 +228,74 @@ public class ChatActivity extends Activity {
 
         @Override
         public Object getItem(int position) {
-            return null;
+            return list.get(position);
         }
 
         @Override
         public long getItemId(int position) {
-            return 0;
+            return position;
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder = null;
             if (convertView == null) {
-                convertView = View.inflate(ChatActivity.this, R.layout.item_chat, null);
-                hodler = new MyHodler();
-                hodler.rec = convertView.findViewById(R.id.rec);
-                hodler.send = convertView.findViewById(R.id.send);
-                hodler.rec_body = convertView.findViewById(R.id.rec_body);
-                hodler.send_body = convertView.findViewById(R.id.send_body);
-                convertView.setTag(hodler);
-            }else{
-                hodler = (MyHodler) convertView.getTag();
-            }
-
-            if ("0".equals(list.get(position).type)) {
-                hodler.rec.setVisibility(View.GONE);
-                hodler.send_body.setText(list.get(position).body);
+                holder = new ViewHolder();
+                convertView = View.inflate(ChatActivity.this, R.layout.item_chat_list, null);
+                holder.llLeft = convertView.findViewById(R.id.ll_chat_left);
+                holder.llRight = convertView.findViewById(R.id.ll_chat_right);
+                holder.rec_name = convertView.findViewById(R.id.rec_name);
+                holder.tvDate = convertView.findViewById(R.id.tv_chat_date);
+                holder.tvTitle = convertView.findViewById(R.id.tv_chat_title);
+                holder.tvTitle2 = convertView.findViewById(R.id.tv_chat_title2);
+                holder.iv_left = convertView.findViewById(R.id.iv_left);
+                holder.iv_right = convertView.findViewById(R.id.iv_right);
+                convertView.setTag(holder);
             } else {
-                hodler.send.setVisibility(View.GONE);
-                hodler.rec_body.setText(list.get(position).body);
+                holder = (ViewHolder) convertView.getTag();
+            }
+            Msg msg = list.get(position);
+            holder.tvDate.setText(msg.getDate());
+            String myself = msg.getMyself();
+            if (myself.equals("IN")) {
+                holder.llLeft.setVisibility(View.VISIBLE);
+                holder.llRight.setVisibility(View.GONE);
+                holder.rec_name.setText(msg.getName());
+                if (msg.getTitle() != null && !msg.getTitle().isEmpty()) {
+                    holder.tvTitle.setText(msg.getTitle());
+                    holder.tvTitle.setVisibility(View.VISIBLE);
+                    holder.iv_left.setVisibility(View.GONE);
+                } else {
+                    holder.tvTitle.setVisibility(View.GONE);
+                    holder.iv_left.setVisibility(View.VISIBLE);
+//                    Glide.with(ChatActivity.this).load(ALBUM_PATH + msg.getImg_path()).into(holder.iv_left);
+                }
+            } else if (myself.equals("OUT")) {
+                holder.llLeft.setVisibility(View.GONE);
+                holder.llRight.setVisibility(View.VISIBLE);
+                holder.tvTitle2.setText(msg.getTitle());
+                if (msg.getTitle() != null && !msg.getTitle().isEmpty()) {
+                    holder.tvTitle2.setText(msg.getTitle());
+                    holder.tvTitle2.setVisibility(View.VISIBLE);
+                    holder.iv_right.setVisibility(View.GONE);
+                } else {
+                    holder.tvTitle2.setVisibility(View.GONE);
+                    holder.iv_right.setVisibility(View.VISIBLE);
+//                    Glide.with(ChatActivity.this).load(msg.getImg_path()).into(holder.iv_right);
+                }
             }
             return convertView;
+        }
+
+        class ViewHolder {
+            RelativeLayout llLeft;
+            LinearLayout llRight;
+            TextView rec_name;
+            TextView tvDate;
+            TextView tvTitle;
+            TextView tvTitle2;
+            ImageView iv_left;
+            ImageView iv_right;
         }
     }
 }
