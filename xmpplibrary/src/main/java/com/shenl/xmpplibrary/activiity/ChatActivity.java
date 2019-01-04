@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +18,6 @@ import android.widget.TextView;
 
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.Msg;
-import com.shenl.xmpplibrary.bean.MsgBean;
 import com.shenl.xmpplibrary.service.MsgService;
 import com.shenl.xmpplibrary.utils.DateTimeUtils;
 import com.shenl.xmpplibrary.utils.ImageUtils;
@@ -30,9 +28,6 @@ import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smackx.filetransfer.FileTransferListener;
-import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
-import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -61,7 +56,6 @@ public class ChatActivity extends Activity {
                     listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
                     break;
             }
-
         }
     };
 
@@ -104,23 +98,40 @@ public class ChatActivity extends Activity {
 
     private void initEvent() {
         if (isGroup) {
-
+            XmppUtils.XmppGroupMessage(new PacketListener() {
+                @Override
+                public void processPacket(Packet packet) {
+                    Message message = (Message) packet;
+                    // 接收来自聊天室的聊天信息
+                    String groupName = message.getFrom();
+                    String[] nameOrGroup = groupName.split("/");
+                    //判断是否是本人发出的消息 不是则显示
+                    if (!nameOrGroup[1].equals(MsgService.nickname)) {
+                        String[] args = new String[]{nameOrGroup[1], message.getBody()};
+                        // 在handler里取出来显示消息
+                        android.os.Message msg = handler.obtainMessage();
+                        msg.what = 1;
+                        msg.obj = args;
+                        msg.sendToTarget();
+                    }
+                }
+            });
         } else {
             //消息监听器
             XmppUtils.XmppGetMessage(new MessageListener() {
                 @Override
                 public void processMessage(Chat chat, Message message) {
-                    Log.e("shenl",message.getBody());
+                    Log.e("shenl", message.getBody());
                     // 获取自己好友发来的信息
-                        if (message.getBody().length() > 0) {
-                            // 获取用户、消息、时间、IN
-                            String from = message.getFrom().substring(0, message.getFrom().indexOf("@"));
-                            String[] args = new String[]{from, message.getBody()};
-                            // 在handler里取出来显示消息
-                            android.os.Message msg = handler.obtainMessage();
-                            msg.what = 1;
-                            msg.obj = args;
-                            msg.sendToTarget();
+                    if (message.getBody().length() > 0) {
+                        // 获取用户、消息、时间、IN
+                        String from = message.getFrom().substring(0, message.getFrom().indexOf("@"));
+                        String[] args = new String[]{from, message.getBody()};
+                        // 在handler里取出来显示消息
+                        android.os.Message msg = handler.obtainMessage();
+                        msg.what = 1;
+                        msg.obj = args;
+                        msg.sendToTarget();
                     }
                 }
             });
@@ -171,15 +182,24 @@ public class ChatActivity extends Activity {
         final String body = et_body.getText().toString().trim();
         String dateStr = DateTimeUtils.formatDate(new Date());
         if (isGroup) {
+            XmppUtils.XmppSendGroupMessage(body, new XmppUtils.XmppListener() {
+                @Override
+                public void Success() {
 
+                }
+
+                @Override
+                public void Error(String error) {
+
+                }
+            });
         } else {
             final Message msg = new Message();
             msg.setBody(body);// 输入框里面的内容
-//            msg.setType(Message.Type.chat);// 类型就是chat
-            //msg.setProperty("key", "value");// 额外属性-->额外的信息,这里我们用不到
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.e("shenl",user);
                     XmppUtils.XmppSendMessage(user, msg, new XmppUtils.XmppListener() {
                         @Override
                         public void Success() {
@@ -203,12 +223,6 @@ public class ChatActivity extends Activity {
     }
 
 
-    class MyHodler {
-        RelativeLayout rec, send;
-        ImageView rec_head, send_head;
-        TextView rec_body, send_body;
-    }
-
     /**
      * TODO : 聊天适配器
      * 参数说明 :
@@ -218,8 +232,6 @@ public class ChatActivity extends Activity {
      * @return :
      */
     class MyAdapter extends BaseAdapter {
-
-        private MyHodler hodler;
 
         @Override
         public int getCount() {

@@ -11,8 +11,8 @@ import com.shenl.xmpplibrary.utils.XmppUtils;
 
 public class SplashActivity extends BaseActivity {
 
-//    public static final String sarviceName = "172.30.4.15";
-    public static final String sarviceName = "192.168.99.5";
+    public static final String sarviceName = "172.30.4.15";
+//    public static final String sarviceName = "192.168.99.5";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
