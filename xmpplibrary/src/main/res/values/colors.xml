@@ -12,4 +12,8 @@
     <color name="gray_line">#D7D7D7</color>
     
     <color name="white">#FFFFFF</color>
+    <color name="background_tab_pressed">#99777777</color>
+    <color name="send_dongtai_background_color">#f2f2f2</color>
+    <color name="word_normal_color">#282828</color>
+    <color name="grey8">#888888</color>
 </resources>

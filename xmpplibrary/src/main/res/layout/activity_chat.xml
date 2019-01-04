@@ -1,7 +1,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/ll_root">
 
     <TextView
         android:id="@+id/title"
@@ -11,26 +12,36 @@
         android:gravity="center"
         android:text="gagaaga"
         android:textColor="#fff"
-        android:textSize="24sp"/>
+        android:textSize="24sp" />
 
     <ListView
         android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:divider="@null"
-        android:layout_weight="1"/>
+        android:layout_weight="1"
+        android:divider="@null" />
 
     <LinearLayout
+        android:id="@+id/ll_emogi"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/send_dongtai_background_color"
+        android:clickable="true"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
-        <!-- 输入框-->
-        <EditText
+
+        <ImageView
+            android:id="@+id/iv_emogi"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/fabu_biaoqing_icon" />
+
+        <com.shenl.xmpplibrary.emoji.widget.ExpressionEditText
             android:id="@+id/et_body"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"/>
-        <!-- 发送按钮-->
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:textColor="#000"
+            android:layout_height="wrap_content" />
         <ImageView
             android:layout_width="30dp"
             android:layout_height="30dp"
@@ -44,4 +55,11 @@
             android:text="发送"
             android:onClick="send"/>
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/fl_emogi"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true"/>
 </LinearLayout>

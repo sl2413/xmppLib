@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"/>
 
-        <TextView
+        <com.shenl.xmpplibrary.emoji.widget.ExpressionTextView
             android:id="@+id/tv_chat_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -65,7 +65,7 @@
             android:scaleType="fitXY"
             android:visibility="gone"/>
 
-        <TextView
+        <com.shenl.xmpplibrary.emoji.widget.ExpressionTextView
             android:id="@+id/tv_chat_title2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
