@@ -37,7 +37,7 @@
             android:layout_height="30dp"
             android:src="@drawable/fabu_biaoqing_icon" />
 
-        <com.shenl.xmpplibrary.emoji.widget.ExpressionEditText
+        <EditText
             android:id="@+id/et_body"
             android:layout_width="0dp"
             android:layout_weight="1"
@@ -60,7 +60,7 @@
     <FrameLayout
         android:id="@+id/fl_emogi"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="200dp"
         android:visibility="gone"
         android:layout_alignParentBottom="true"/>
 </LinearLayout>

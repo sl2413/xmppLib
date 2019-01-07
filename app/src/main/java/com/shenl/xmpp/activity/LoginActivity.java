@@ -32,14 +32,7 @@ public class LoginActivity extends BaseActivity {
         et_name = findViewById(R.id.et_name);
         et_pswd = findViewById(R.id.et_pswd);
         btn_login = findViewById(R.id.btn_login);
-        TextView tv = findViewById(R.id.tv);
 
-        int unicodeCry = Integer.parseInt("1F602", 16);
-        String emojiString = new String(Character.toChars(unicodeCry));
-        String emo = Character.toString((char) 0x2764);
-//        Emojicon emojicon = People.DATA[0];
-        tv.setText(emojiString);
-//        textview.setEmojiconSize(60);
     }
 
     public void initData() {

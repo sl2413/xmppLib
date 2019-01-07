@@ -1,25 +1,21 @@
 package com.shenl.xmpplibrary.activiity;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Rect;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
-import android.util.DisplayMetrics;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -29,10 +25,7 @@ import android.widget.TextView;
 
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.Msg;
-import com.shenl.xmpplibrary.emoji.ExpressionGridFragment;
-import com.shenl.xmpplibrary.emoji.ExpressionShowFragment;
-import com.shenl.xmpplibrary.emoji.widget.ExpressionEditText;
-import com.shenl.xmpplibrary.emoji.widget.ExpressionTextView;
+import com.shenl.xmpplibrary.fragment.EmojiFragment;
 import com.shenl.xmpplibrary.service.MsgService;
 import com.shenl.xmpplibrary.utils.DateTimeUtils;
 import com.shenl.xmpplibrary.utils.ImageUtils;
@@ -54,10 +47,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class ChatActivity extends FragmentActivity implements ExpressionGridFragment.ExpressionClickListener, ExpressionGridFragment.ExpressionDeleteClickListener {
+public class ChatActivity extends FragmentActivity {
 
     private ListView listview;
-    private ExpressionEditText et_body;
+    private EditText et_body;
     private TextView title;
     private String user;
     private List<Msg> list;
@@ -65,11 +58,6 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
     private String name;
     private boolean isGroup;
     private boolean isEmogiShow;
-    private boolean keyboardShown;
-    private int supportSoftInputHeight;
-    private ExpressionShowFragment expressionShowFragment;
-    private final static String Folder = "/Xmpp";
-    private final static String ALBUM_PATH = Environment.getExternalStorageState() + Folder;
     private Handler handler = new Handler() {
         public void handleMessage(android.os.Message msg) {
             String[] args = (String[]) msg.obj;
@@ -126,6 +114,10 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
     }
 
     private void initData() {
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.replace(R.id.fl_emogi,new EmojiFragment());
+        ft.commit();
         Intent intent = getIntent();
         isGroup = intent.getBooleanExtra("isGroup", false);
         user = intent.getStringExtra("user");
@@ -146,39 +138,32 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
 
 
     private void initEvent() {
-        ll_root.setOnClickListener(new View.OnClickListener() {
+        //表情按钮点击事件
+        iv_emogi.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                hideKeyboard(ChatActivity.this);
+            public void onClick(View v) {
+                if (isEmogiShow){
+                    fl_emogi.setVisibility(View.GONE);
+                    iv_emogi.setImageResource(R.drawable.fabu_biaoqing_icon);
+                    showKeyboard(ChatActivity.this,et_body);
+                }else{
+                    fl_emogi.setVisibility(View.VISIBLE);
+                    iv_emogi.setImageResource(R.drawable.fabu_keyboard_icon);
+                    hideKeyboard(ChatActivity.this);
+                }
+                isEmogiShow = !isEmogiShow;
             }
         });
-        setListenerToRootView();
+        //内容输入框点击事件
         et_body.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                isEmogiShow = false;
                 iv_emogi.setImageResource(R.drawable.fabu_biaoqing_icon);
                 showKeyboard(ChatActivity.this, et_body);
                 fl_emogi.setVisibility(View.GONE);
             }
         });
-        //表情按钮点击事件
-        iv_emogi.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (isEmogiShow) {
-                    isEmogiShow = false;
-                    showKeyboard(ChatActivity.this, et_body);
-                    iv_emogi.setImageResource(R.drawable.fabu_biaoqing_icon);
-                    fl_emogi.setVisibility(View.GONE);
-                    return;
-                } else {
-                    iv_emogi.setImageResource(R.drawable.fabu_keyboard_icon);
-                    replaceEmogi();
-                    hideKeyboard(ChatActivity.this);
-                }
-            }
-        });
+        //文件接收监听器
         XmppUtils.XmppGetFile(new FileTransferListener() {
             @Override
             public void fileTransferRequest(final FileTransferRequest request) {
@@ -207,10 +192,6 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                                     System.out.println(transfer.getStatus());
                                     System.out.println(transfer.getProgress());
                                 }
-                                /*try {
-                                    Thread.sleep(1000L);
-                                } catch (Exception e) {
-                                }*/
                             }
                             //判断是否完全接收文件
                             if (transfer.isDone()) {
@@ -224,8 +205,6 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                         } catch (XMPPException e) {
                             e.printStackTrace();
                         }
-
-
                     }
                 }).start();
             }
@@ -269,6 +248,17 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                 }
             });
         }
+    }
+
+    /**
+     * TODO : 为输入框添加表情
+     * 参数说明 :
+     * 作者 : shenl
+     * 创建日期 : 2019/1/7
+     * @return :
+     */
+    public void setBody(String emoji){
+        et_body.append(emoji);
     }
 
     /**
@@ -370,21 +360,6 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
         et_body.setText("");
     }
 
-    /**
-     * TODO 功能：表情显示
-     * <p>
-     * 参数说明:
-     * 作    者:   沈 亮
-     * 创建时间:   2019/1/4
-     */
-    private void replaceEmogi() {
-        isEmogiShow = true;
-        fl_emogi.setVisibility(View.VISIBLE);
-        if (expressionShowFragment == null) {
-            expressionShowFragment = ExpressionShowFragment.newInstance();
-            getSupportFragmentManager().beginTransaction().replace(R.id.fl_emogi, ExpressionShowFragment.newInstance()).commit();
-        }
-    }
 
     /**
      * TODO 功能：隐藏键盘
@@ -413,94 +388,6 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
         InputMethodManager imm = (InputMethodManager) context.getSystemService(context.INPUT_METHOD_SERVICE);
         imm.showSoftInput(view, 0);
     }
-
-    /**
-     * TODO 功能：判断键盘弹出状态
-     * <p>
-     * 参数说明:
-     * 作    者:   沈 亮
-     * 创建时间:   2019/1/4
-     */
-    private boolean isKeyboardShown(View rootView) {
-        final int softKeyboardHeight = 100;
-        Rect r = new Rect();
-        rootView.getWindowVisibleDisplayFrame(r);
-        DisplayMetrics dm = rootView.getResources().getDisplayMetrics();
-        int heightDiff = rootView.getBottom() - r.bottom;
-        return heightDiff > softKeyboardHeight * dm.density;
-    }
-
-    /**
-     * TODO 功能：动态监听键盘状态
-     * <p>
-     * 参数说明:
-     * 作    者:   沈 亮
-     * 创建时间:   2019/1/4
-     */
-    private void setListenerToRootView() {
-        ll_root.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                keyboardShown = isKeyboardShown(ll_root);
-                if (fl_emogi != null && ll_emogi != null) {
-                    if (keyboardShown) {
-                        if (ll_emogi.getVisibility() != View.VISIBLE || supportSoftInputHeight != getSupportSoftInputHeight()) {
-                            iv_emogi.setImageResource(R.drawable.fabu_biaoqing_icon);
-                            isEmogiShow = false;
-                            ll_root.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                            supportSoftInputHeight = getSupportSoftInputHeight();
-                            fl_emogi.getLayoutParams().height = supportSoftInputHeight;
-                            fl_emogi.requestLayout();
-                            fl_emogi.setVisibility(View.GONE);
-                            ll_emogi.setVisibility(View.VISIBLE);
-                            ll_root.getViewTreeObserver().addOnGlobalLayoutListener(this);
-                        }
-                    } else {
-                        if (!isEmogiShow) {
-                            iv_emogi.setImageResource(R.drawable.fabu_biaoqing_icon);
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    private int getSupportSoftInputHeight() {
-        Rect r = new Rect();
-        this.getWindow().getDecorView().getWindowVisibleDisplayFrame(r);
-        int screenHeight = this.getWindow().getDecorView().getRootView().getHeight();
-        int softInputHeight = screenHeight - r.bottom;
-        if (Build.VERSION.SDK_INT >= 20) {
-            // When SDK Level >= 20 (Android L), the softInputHeight will contain the height of softButtonsBar (if has)
-            softInputHeight = softInputHeight - getSoftButtonsBarHeight();
-        }
-        return softInputHeight;
-    }
-
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    private int getSoftButtonsBarHeight() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        int usableHeight = metrics.heightPixels;
-        getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
-        int realHeight = metrics.heightPixels;
-        if (realHeight > usableHeight) {
-            return realHeight - usableHeight;
-        } else {
-            return 0;
-        }
-    }
-
-    @Override
-    public void expressionClick(String str) {
-        ExpressionShowFragment.input(et_body, str);
-    }
-
-    @Override
-    public void expressionDeleteClick(View v) {
-        ExpressionShowFragment.delete(et_body);
-    }
-
 
     /**
      * TODO : 聊天适配器
@@ -570,7 +457,6 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                             startActivity(intent);
                         }
                     });
-//                    Glide.with(ChatActivity.this).load(ALBUM_PATH + msg.getImg_path()).into(holder.iv_left);
                 }
             } else if (myself.equals("OUT")) {
                 holder.llLeft.setVisibility(View.GONE);
@@ -594,7 +480,6 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                             startActivity(intent);
                         }
                     });
-//                    Glide.with(ChatActivity.this).load(msg.getImg_path()).into(holder.iv_right);
                 }
             }
             return convertView;
@@ -605,8 +490,8 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
             LinearLayout llRight;
             TextView rec_name;
             TextView tvDate;
-            ExpressionTextView tvTitle;
-            ExpressionTextView tvTitle2;
+            TextView tvTitle;
+            TextView tvTitle2;
             ImageView iv_left;
             ImageView iv_right;
         }
