@@ -26,8 +26,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.Msg;
 import com.shenl.xmpplibrary.emoji.ExpressionGridFragment;
@@ -270,13 +268,6 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                 }
             });
         }
-        //聊天列表点击事件
-        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-            }
-        });
     }
 
     /**
