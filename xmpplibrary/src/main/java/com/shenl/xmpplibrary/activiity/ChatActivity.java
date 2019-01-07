@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -25,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.Msg;
@@ -68,7 +70,7 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
     private int supportSoftInputHeight;
     private ExpressionShowFragment expressionShowFragment;
     private final static String Folder = "/Xmpp";
-    private final static String ALBUM_PATH = Environment.getExternalStorageState()+Folder;
+    private final static String ALBUM_PATH = Environment.getExternalStorageState() + Folder;
     private Handler handler = new Handler() {
         public void handleMessage(android.os.Message msg) {
             String[] args = (String[]) msg.obj;
@@ -180,45 +182,53 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
         });
         XmppUtils.XmppGetFile(new FileTransferListener() {
             @Override
-            public void fileTransferRequest(FileTransferRequest request) {
-                //文件接收
-                IncomingFileTransfer transfer = request.accept();
-                //获取文件名字
-                String fileName = transfer.getFileName();
-                //本地创建文件
-                File sdCardDir = new File(getCacheDir().getPath()+"/xmpp");
-                if (!sdCardDir.exists()) {//判断文件夹目录是否存在
-                    sdCardDir.mkdir();//如果不存在则创建
-                }
-                String save_path = sdCardDir +"/"+ fileName;
-                File file = new File(save_path);
-                //接收文件
-                try {
-                    transfer.recieveFile(file);
-                    while (!transfer.isDone()) {
-                        if (transfer.getStatus().equals(FileTransfer.Status.error)) {
-                            System.out.println("ERROR!!! " + transfer.getError());
-                        } else {
-                            System.out.println(transfer.getStatus());
-                            System.out.println(transfer.getProgress());
+            public void fileTransferRequest(final FileTransferRequest request) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        //文件接收
+                        IncomingFileTransfer transfer = request.accept();
+                        //获取文件名字
+                        String fileName = transfer.getFileName();
+                        //本地创建文件
+                        File sdCardDir = new File(getCacheDir().getPath() + "/xmpp");
+                        if (!sdCardDir.exists()) {//判断文件夹目录是否存在
+                            sdCardDir.mkdir();//如果不存在则创建
                         }
+                        String save_path = sdCardDir + "/" + fileName;
+                        File file = new File(save_path);
+                        //接收文件
                         try {
-                            Thread.sleep(1000L);
-                        } catch (Exception e) {
+                            transfer.recieveFile(file);
+                            while (!transfer.isDone()) {
+                                if (transfer.getStatus().equals(FileTransfer.Status.error)) {
+                                    System.out.println("ERROR!!! " + transfer.getError());
+                                } else {
+                                    System.out.println(transfer.getStatus());
+                                    System.out.println(transfer.getProgress());
+                                }
+                                /*try {
+                                    Thread.sleep(1000L);
+                                } catch (Exception e) {
+                                }*/
+                            }
+                            //判断是否完全接收文件
+                            if (transfer.isDone()) {
+                                String[] args = new String[]{name, save_path};
+                                android.os.Message msg = handler.obtainMessage();
+                                msg.what = 2;
+                                msg.obj = args;
+                                //发送msg,刷新adapter显示图片
+                                msg.sendToTarget();
+                            }
+                        } catch (XMPPException e) {
+                            e.printStackTrace();
                         }
+
+
                     }
-                    //判断是否完全接收文件
-                    if (transfer.isDone()) {
-                        String[] args = new String[]{name, save_path};
-                        android.os.Message msg = handler.obtainMessage();
-                        msg.what = 2;
-                        msg.obj = args;
-                        //发送msg,刷新adapter显示图片
-                        msg.sendToTarget();
-                    }
-                } catch (XMPPException e) {
-                    e.printStackTrace();
-                }
+                }).start();
             }
         });
         if (isGroup) {
@@ -260,6 +270,13 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                 }
             });
         }
+        //聊天列表点击事件
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+            }
+        });
     }
 
     /**
@@ -284,22 +301,29 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
         Uri uri = data.getData();
         final String path = ImageUtils.getRealPathFromUri(this, uri);
         Log.d("shenl", "realPath = " + path);
-        XmppUtils.XmppSendFile(user, new File(path), new XmppUtils.XmppListener() {
+        new Thread(new Runnable() {
             @Override
-            public void Success() {
-                String[] args = new String[]{MsgService.nickname, path};
-                android.os.Message msg = handler.obtainMessage();
-                msg.what = 3;
-                msg.obj = args;
-                msg.sendToTarget();
-                Log.e("shenl", "发送成功");
-            }
+            public void run() {
+                Log.e("shenl", user);
+                XmppUtils.XmppSendFile(user + "/Spark", new File(path), new XmppUtils.XmppListener() {
+                    @Override
+                    public void Success() {
+                        String[] args = new String[]{MsgService.nickname, path};
+                        android.os.Message msg = handler.obtainMessage();
+                        msg.what = 3;
+                        msg.obj = args;
+                        msg.sendToTarget();
+                        Log.e("shenl", "发送成功");
+                    }
 
-            @Override
-            public void Error(String error) {
-                Log.e("shenl", "发送失败..." + error);
+                    @Override
+                    public void Error(String error) {
+                        Log.e("shenl", "发送失败..." + error);
+                    }
+                });
+
             }
-        });
+        }).start();
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -529,7 +553,7 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
             } else {
                 holder = (ViewHolder) convertView.getTag();
             }
-            Msg msg = list.get(position);
+            final Msg msg = list.get(position);
             holder.tvDate.setText(msg.getDate());
             String myself = msg.getMyself();
             if (myself.equals("IN")) {
@@ -545,6 +569,15 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                     holder.iv_left.setVisibility(View.VISIBLE);
                     Bitmap bitmap = BitmapFactory.decodeFile(msg.getImg_path());
                     holder.iv_left.setImageBitmap(bitmap);
+                    //查看收到图片
+                    holder.iv_left.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent intent = new Intent(ChatActivity.this, SeeImgActivity.class);
+                            intent.putExtra("imgPath", msg.getImg_path());
+                            startActivity(intent);
+                        }
+                    });
 //                    Glide.with(ChatActivity.this).load(ALBUM_PATH + msg.getImg_path()).into(holder.iv_left);
                 }
             } else if (myself.equals("OUT")) {
@@ -560,6 +593,15 @@ public class ChatActivity extends FragmentActivity implements ExpressionGridFrag
                     holder.iv_right.setVisibility(View.VISIBLE);
                     Bitmap bitmap = BitmapFactory.decodeFile(msg.getImg_path());
                     holder.iv_right.setImageBitmap(bitmap);
+                    //查看发出图片
+                    holder.iv_right.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent intent = new Intent(ChatActivity.this, SeeImgActivity.class);
+                            intent.putExtra("imgPath", msg.getImg_path());
+                            startActivity(intent);
+                        }
+                    });
 //                    Glide.with(ChatActivity.this).load(msg.getImg_path()).into(holder.iv_right);
                 }
             }

@@ -299,7 +299,7 @@ public class XmppUtils {
      * 作    者:   沈 亮
      * 创建时间:   2019/1/2
      */
-    public static void XmppSendFile(String toUser, File file,XmppListener listener) {
+    public static void XmppSendFile(final String toUser, final File file, final XmppListener listener) {
         try {
             FileTransferManager fileTransferManager = new FileTransferManager(MsgService.xmppConnection);
             if (file.exists() == false) {
@@ -328,6 +328,7 @@ public class XmppUtils {
             listener.Error(e.getMessage());
             e.printStackTrace();
         }
+
     }
 
     /**

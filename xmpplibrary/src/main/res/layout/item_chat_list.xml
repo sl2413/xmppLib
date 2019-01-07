@@ -44,7 +44,7 @@
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_marginLeft="10dp"
-            android:layout_toRightOf="@id/rec_head"
+            android:layout_toRightOf="@id/rec_name"
             android:scaleType="fitXY"
             android:visibility="gone" />
     </RelativeLayout>
