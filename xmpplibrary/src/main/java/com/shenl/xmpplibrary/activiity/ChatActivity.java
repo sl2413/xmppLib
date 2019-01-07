@@ -26,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.Msg;
 import com.shenl.xmpplibrary.emoji.ExpressionGridFragment;
