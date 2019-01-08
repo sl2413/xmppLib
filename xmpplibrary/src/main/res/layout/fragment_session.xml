@@ -12,8 +12,7 @@
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
         android:paddingLeft="10dp"
-        android:hint="输入收取人"
-        android:background="@drawable/et_bgc"/>
+        android:hint="输入收取人"/>
 
 
     <LinearLayout
@@ -28,7 +27,6 @@
             android:paddingBottom="8dp"
             android:paddingLeft="10dp"
             android:hint="消息内容"
-            android:background="@drawable/et_bgc"
             android:layout_height="wrap_content" />
         <Button
             android:id="@+id/btn_send"
