@@ -166,13 +166,17 @@ public class XmppUtils {
             public void run() {
                 final List<HostedRoom> list = new ArrayList<>();
                 try {
-                    //遍历每个人所创建的群
-                    for (HostedRoom host : MultiUserChat.getHostedRooms(MsgService.xmppConnection, MsgService.xmppConnection.getServiceName())) {
-                        //遍历某个人所创建的群
-                        for (HostedRoom singleHost : MultiUserChat.getHostedRooms(MsgService.xmppConnection, host.getJid())) {
-                            RoomInfo info = MultiUserChat.getRoomInfo(MsgService.xmppConnection, singleHost.getJid());
-                            if (singleHost.getJid().indexOf("@") > 0) {
-                                list.add(singleHost);
+                    Log.e("shenl",MsgService.xmppConnection.getServiceName());
+                    Collection<HostedRoom> hostedRooms = MultiUserChat.getHostedRooms(MsgService.xmppConnection, MsgService.xmppConnection.getServiceName());
+                    if (hostedRooms.size() != 0) {
+                        //遍历每个人所创建的群
+                        for (HostedRoom host : hostedRooms) {
+                            //遍历某个人所创建的群
+                            for (HostedRoom singleHost : MultiUserChat.getHostedRooms(MsgService.xmppConnection, host.getJid())) {
+                                RoomInfo info = MultiUserChat.getRoomInfo(MsgService.xmppConnection, singleHost.getJid());
+                                if (singleHost.getJid().indexOf("@") > 0) {
+                                    list.add(singleHost);
+                                }
                             }
                         }
                     }
