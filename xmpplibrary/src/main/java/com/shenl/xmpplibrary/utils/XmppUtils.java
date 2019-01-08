@@ -161,22 +161,32 @@ public class XmppUtils {
      * 创建时间:   2019/1/2
      */
     public static void XmppServiceRooms(final GroupListener listener) {
-        List<HostedRoom> list = new ArrayList<>();
-        try {
-            //遍历每个人所创建的群
-            for (HostedRoom host : MultiUserChat.getHostedRooms(MsgService.xmppConnection, MsgService.xmppConnection.getServiceName())) {
-                //遍历某个人所创建的群
-                for (HostedRoom singleHost : MultiUserChat.getHostedRooms(MsgService.xmppConnection, host.getJid())) {
-                    RoomInfo info = MultiUserChat.getRoomInfo(MsgService.xmppConnection,singleHost.getJid());
-                    if (singleHost.getJid().indexOf("@") > 0) {
-                        list.add(singleHost);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final List<HostedRoom> list = new ArrayList<>();
+                try {
+                    //遍历每个人所创建的群
+                    for (HostedRoom host : MultiUserChat.getHostedRooms(MsgService.xmppConnection, MsgService.xmppConnection.getServiceName())) {
+                        //遍历某个人所创建的群
+                        for (HostedRoom singleHost : MultiUserChat.getHostedRooms(MsgService.xmppConnection, host.getJid())) {
+                            RoomInfo info = MultiUserChat.getRoomInfo(MsgService.xmppConnection, singleHost.getJid());
+                            if (singleHost.getJid().indexOf("@") > 0) {
+                                list.add(singleHost);
+                            }
+                        }
                     }
+                    mhandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.Success(list);
+                        }
+                    });
+                } catch (XMPPException e) {
+                    e.printStackTrace();
                 }
             }
-            listener.Success(list);
-        } catch (XMPPException e) {
-            e.printStackTrace();
-        }
+        }).start();
     }
 
     /**
@@ -233,7 +243,7 @@ public class XmppUtils {
      * 作    者:   沈 亮
      * 创建时间:   2019/1/3
      */
-    public static void XmppJoinRoom(String nickname, String password, String roomName,XmppListener listener) {
+    public static void XmppJoinRoom(String nickname, String password, String roomName, XmppListener listener) {
         try {
             // 使用XMPPConnection创建一个MultiUserChat窗口
             muc = new MultiUserChat(MsgService.xmppConnection, roomName
@@ -253,12 +263,12 @@ public class XmppUtils {
 
     /**
      * TODO 功能：获取加入过的群
-     *
+     * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/3
      */
-    public static void XmppGetJoinRooms(){
+    public static void XmppGetJoinRooms() {
         Iterator<String> joinedRooms = MultiUserChat.getJoinedRooms(MsgService.xmppConnection, MsgService.xmppConnection.getServiceName());
 
     }
@@ -306,13 +316,13 @@ public class XmppUtils {
                 return;
             }
             OutgoingFileTransfer outfile = fileTransferManager.createOutgoingFileTransfer(toUser);
-            outfile.sendFile(file, "文件来自"+toUser);
+            outfile.sendFile(file, "文件来自" + toUser);
             while (!outfile.isDone()) {
                 if (outfile.getStatus().equals(FileTransfer.Status.error)) {
-                    Log.e("shenl","ERROR!!! " + outfile.getError());
+                    Log.e("shenl", "ERROR!!! " + outfile.getError());
                 } else {
-                    Log.e("shenl","Status="+outfile.getStatus());
-                    Log.e("shenl","Progress="+outfile.getProgress());
+                    Log.e("shenl", "Status=" + outfile.getStatus());
+                    Log.e("shenl", "Progress=" + outfile.getProgress());
                 }
                 try {
                     Thread.sleep(1000);
@@ -336,9 +346,10 @@ public class XmppUtils {
      * 参数说明 :
      * 作者 : shenl
      * 创建日期 : 2019/1/3
+     *
      * @return :
      */
-    public static void XmppGetFile(FileTransferListener listener){
+    public static void XmppGetFile(FileTransferListener listener) {
         ServiceDiscoveryManager sdManager = ServiceDiscoveryManager
                 .getInstanceFor(MsgService.xmppConnection);
         if (sdManager == null) {
