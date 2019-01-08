@@ -76,7 +76,9 @@ public class XmppUtils {
                     //设置登录状态 true-为在线
                     config.setSendPresence(true);
                     //设置不需要SAS验证
-//                    config.setSASLAuthenticationEnabled(false);
+                    //config.setSASLAuthenticationEnabled(false);
+                    // 是否启用调试
+                    config.setDebuggerEnabled(false);
                     //创建连接
                     MsgService.xmppConnection = new XMPPConnection(config);
                     //开始连接
@@ -192,6 +194,38 @@ public class XmppUtils {
             }
         }).start();
     }
+    /*public static void XmppServiceRooms(final GroupListener listener) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final List<HostedRoom> list = new ArrayList<>();
+                try {
+                    Log.e("shenl",MsgService.xmppConnection.getServiceName());
+                    Collection<HostedRoom> hostedRooms = MultiUserChat.getHostedRooms(MsgService.xmppConnection, MsgService.xmppConnection.getServiceName());
+                    if (hostedRooms.size() != 0) {
+                        //遍历每个人所创建的群
+                        for (HostedRoom host : hostedRooms) {
+                            //遍历某个人所创建的群
+                            for (HostedRoom singleHost : MultiUserChat.getHostedRooms(MsgService.xmppConnection, host.getJid())) {
+                                RoomInfo info = MultiUserChat.getRoomInfo(MsgService.xmppConnection, singleHost.getJid());
+                                if (singleHost.getJid().indexOf("@") > 0) {
+                                    list.add(singleHost);
+                                }
+                            }
+                        }
+                    }
+                    mhandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.Success(list);
+                        }
+                    });
+                } catch (XMPPException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }*/
 
     /**
      * TODO 功能：发送单聊消息
@@ -274,7 +308,6 @@ public class XmppUtils {
      */
     public static void XmppGetJoinRooms() {
         Iterator<String> joinedRooms = MultiUserChat.getJoinedRooms(MsgService.xmppConnection, MsgService.xmppConnection.getServiceName());
-
     }
 
     /**
