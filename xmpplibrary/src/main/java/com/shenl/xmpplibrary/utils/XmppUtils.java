@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 
-import com.shenl.xmpplibrary.bean.Msg;
 import com.shenl.xmpplibrary.service.MsgService;
 
 import org.jivesoftware.smack.Chat;
@@ -19,28 +18,22 @@ import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smackx.MultipleRecipientManager;
 import org.jivesoftware.smackx.ServiceDiscoveryManager;
 import org.jivesoftware.smackx.filetransfer.FileTransfer;
 import org.jivesoftware.smackx.filetransfer.FileTransferListener;
 import org.jivesoftware.smackx.filetransfer.FileTransferManager;
 import org.jivesoftware.smackx.filetransfer.FileTransferNegotiator;
-import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
 import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.HostedRoom;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.RoomInfo;
-import org.jivesoftware.smackx.packet.DiscoverItems;
 
 import java.io.File;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class XmppUtils {
 
@@ -75,6 +68,7 @@ public class XmppUtils {
                     config.setReconnectionAllowed(true);
                     //设置登录状态 true-为在线
                     config.setSendPresence(true);
+                    config.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
                     //设置不需要SAS验证
                     //config.setSASLAuthenticationEnabled(false);
                     // 是否启用调试
@@ -115,7 +109,7 @@ public class XmppUtils {
                     listener.Success();
                 }
             });
-        } catch (final XMPPException e) {
+        } catch (final Exception e) {
             mhandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -188,7 +182,7 @@ public class XmppUtils {
                             listener.Success(list);
                         }
                     });
-                } catch (XMPPException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
