@@ -41,23 +41,6 @@ public class RoomsFragment extends Fragment {
 
     private void initView(View view) {
         lv_room = view.findViewById(R.id.lv_room);
-        Button btn_SeePerson = view.findViewById(R.id.btn_SeePerson);
-        btn_SeePerson.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                XmppUtils.XmppGetRoomPerson(XmppUtils.muc, new XmppUtils.RoomPersonListener() {
-                    @Override
-                    public void Success(List<String> list) {
-
-                    }
-
-                    @Override
-                    public void Error(String error) {
-                        Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-        });
     }
 
     private void initData() {
@@ -80,7 +63,7 @@ public class RoomsFragment extends Fragment {
         lv_room.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, final int position, long l) {
-                XmppUtils.XmppJoinRoom(MsgService.nickname, "", Glist.get(position).getName(), new XmppUtils.XmppListener() {
+                XmppUtils.XmppJoinRoom(XmppUtils.XmppGetUser(), "", Glist.get(position).getName(), new XmppUtils.XmppListener() {
                     @Override
                     public void Success() {
                         Intent intent = new Intent(getContext(), ChatActivity.class);

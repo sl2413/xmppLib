@@ -135,7 +135,7 @@ public class XmppUtils {
         //开始登陆
         try {
             MsgService.xmppConnection.login(name, pswd, "Android");
-            XmppUtils.user = name + sName;
+            XmppUtils.user = name +"@"+ sName;
             mhandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -370,6 +370,7 @@ public class XmppUtils {
             //history.setSince(new Date());
             // 用户加入聊天室
             muc.join(nickname, password, history, SmackConfiguration.getPacketReplyTimeout());
+            Log.e("shenl",nickname+"加入聊天室");
             listener.Success();
         } catch (XMPPException e) {
             listener.Error(e.getMessage());
