@@ -17,7 +17,7 @@ allprojects {
 在工程中添加依赖
 ~~~
 dependencies {
-   implementation 'com.github.sl2413:xmppLib:0.0.5'
+   implementation 'com.github.sl2413:xmppLib:0.0.6'
 }
 ~~~
   
