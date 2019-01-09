@@ -8,6 +8,8 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.shenl.utils.MyUtils.PageUtils;
 import com.shenl.xmpp.R;
 import com.shenl.xmpplibrary.fragment.ContactsFragment;
 import com.shenl.xmpplibrary.fragment.CreateRoomFragment;
@@ -43,6 +45,9 @@ public class MainActivity extends FragmentActivity {
         tv_title = findViewById(R.id.tv_title);
         vp = findViewById(R.id.vp);
         tabs = findViewById(R.id.ll_toolbar);
+
+
+        PageUtils.showLog("用户＝＝"+XmppUtils.XmppGetJid());
     }
 
     public void initData() {

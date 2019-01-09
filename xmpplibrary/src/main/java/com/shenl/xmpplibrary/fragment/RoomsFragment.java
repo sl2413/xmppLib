@@ -63,7 +63,7 @@ public class RoomsFragment extends Fragment {
         lv_room.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, final int position, long l) {
-                XmppUtils.XmppJoinRoom(XmppUtils.XmppGetUser(), "", Glist.get(position).getName(), new XmppUtils.XmppListener() {
+                XmppUtils.XmppJoinRoom(XmppUtils.XmppGetNickName(), "", Glist.get(position).getName(), new XmppUtils.XmppListener() {
                     @Override
                     public void Success() {
                         Intent intent = new Intent(getContext(), ChatActivity.class);

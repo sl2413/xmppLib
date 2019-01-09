@@ -3,7 +3,6 @@ package com.shenl.xmpplibrary.utils;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.shenl.xmpplibrary.service.MsgService;
 
@@ -36,12 +35,12 @@ import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.HostedRoom;
 import org.jivesoftware.smackx.muc.MultiUserChat;
-import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.packet.ChatStateExtension;
 import org.jivesoftware.smackx.packet.LastActivity;
 import org.jivesoftware.smackx.packet.OfflineMessageInfo;
 import org.jivesoftware.smackx.packet.OfflineMessageRequest;
 import org.jivesoftware.smackx.packet.SharedGroupsInfo;
+import org.jivesoftware.smackx.packet.VCard;
 import org.jivesoftware.smackx.provider.AdHocCommandDataProvider;
 import org.jivesoftware.smackx.provider.DataFormProvider;
 import org.jivesoftware.smackx.provider.DelayInformationProvider;
@@ -73,6 +72,7 @@ public class XmppUtils {
     private static FileTransferManager fileManager;
     public static MultiUserChat muc;
     private static String user;
+    private static VCard vCard;
 
 
     /**
@@ -153,14 +153,46 @@ public class XmppUtils {
     }
 
     /**
-     * TODO 功能：获取当前登陆人id
+     * TODO 功能：获取当前登陆人昵称
      * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/9
      */
-    public static String XmppGetUser() {
-        return user;
+    public static String XmppGetNickName() {
+        try {
+            if (vCard == null) {
+                vCard = new VCard();
+            }
+            vCard.load(MsgService.xmppConnection);
+        } catch (XMPPException e) {
+            e.printStackTrace();
+        }
+        return vCard.getNickName();
+    }
+
+    /**
+     * TODO : 获取当前登陆人Jid
+     * 参数说明 :
+     * 作者 : shenl
+     * 创建日期 : 2019/1/9
+     *
+     * @return :
+     */
+    public static String XmppGetJid() {
+        try {
+            if (vCard == null) {
+                vCard = new VCard();
+            }
+            vCard.load(MsgService.xmppConnection);
+        } catch (XMPPException e) {
+            e.printStackTrace();
+        }
+        String FullJid = vCard.getFrom();
+        if (FullJid.indexOf("/") != -1) {
+            FullJid = FullJid.substring(0, FullJid.indexOf("/"));
+        }
+        return FullJid;
     }
 
     /**
