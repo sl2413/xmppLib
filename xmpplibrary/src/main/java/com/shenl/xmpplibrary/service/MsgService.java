@@ -4,18 +4,17 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-
-import com.shenl.xmpplibrary.utils.XmppUtils;
-
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.MessageListener;
+import com.shenl.xmpplibrary.bean.sessionBean;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.packet.Message;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MsgService extends Service {
 
     public static XMPPConnection xmppConnection;
     public static String nickname;
+    public static List<sessionBean> sessionList = new ArrayList<>();
     @Override
     public IBinder onBind(Intent intent) {
         return null;

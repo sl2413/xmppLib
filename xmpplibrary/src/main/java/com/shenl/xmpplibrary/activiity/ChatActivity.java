@@ -26,6 +26,7 @@ import android.widget.Toast;
 
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.Msg;
+import com.shenl.xmpplibrary.bean.sessionBean;
 import com.shenl.xmpplibrary.fragment.EmojiFragment;
 import com.shenl.xmpplibrary.service.MsgService;
 import com.shenl.xmpplibrary.utils.DateTimeUtils;
@@ -119,7 +120,7 @@ public class ChatActivity extends FragmentActivity {
     private void initData() {
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
-        ft.replace(R.id.fl_emogi,new EmojiFragment());
+        ft.replace(R.id.fl_emogi, new EmojiFragment());
         ft.commit();
         Intent intent = getIntent();
         isGroup = intent.getBooleanExtra("isGroup", false);
@@ -134,7 +135,19 @@ public class ChatActivity extends FragmentActivity {
         } else {
             title.setText("与 " + name + " 聊天中");
         }
-
+        sessionBean sessionBean = new sessionBean();
+        sessionBean.isGroup = isGroup;
+        sessionBean.user = user;
+        sessionBean.name = name;
+        boolean isAdd = true;
+        for (int i = 0; i < MsgService.sessionList.size(); i++) {
+            if (sessionBean.user.equals(MsgService.sessionList.get(i).user)) {
+                isAdd = false;
+            }
+        }
+        if (isAdd) {
+            MsgService.sessionList.add(sessionBean);
+        }
         list = new ArrayList<>();
         adapter = new MyAdapter();
         listview.setAdapter(adapter);
@@ -146,11 +159,11 @@ public class ChatActivity extends FragmentActivity {
         iv_emogi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (isEmogiShow){
+                if (isEmogiShow) {
                     fl_emogi.setVisibility(View.GONE);
                     iv_emogi.setImageResource(R.drawable.fabu_biaoqing_icon);
-                    showKeyboard(ChatActivity.this,et_body);
-                }else{
+                    showKeyboard(ChatActivity.this, et_body);
+                } else {
                     fl_emogi.setVisibility(View.VISIBLE);
                     iv_emogi.setImageResource(R.drawable.fabu_keyboard_icon);
                     hideKeyboard(ChatActivity.this);
@@ -276,9 +289,10 @@ public class ChatActivity extends FragmentActivity {
      * 参数说明 :
      * 作者 : shenl
      * 创建日期 : 2019/1/7
+     *
      * @return :
      */
-    public void setBody(String emoji){
+    public void setBody(String emoji) {
         et_body.append(emoji);
     }
 
