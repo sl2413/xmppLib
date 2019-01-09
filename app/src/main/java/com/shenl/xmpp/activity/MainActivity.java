@@ -8,9 +8,9 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import com.shenl.xmpp.R;
 import com.shenl.xmpplibrary.fragment.ContactsFragment;
+import com.shenl.xmpplibrary.fragment.CreateRoomFragment;
 import com.shenl.xmpplibrary.fragment.RoomsFragment;
 import com.shenl.xmpplibrary.fragment.SessionFragment;
 import com.shenl.xmpplibrary.utils.XmppUtils;
@@ -47,6 +47,7 @@ public class MainActivity extends FragmentActivity {
 
     public void initData() {
         list = new ArrayList<Fragment>();
+        list.add(new CreateRoomFragment());
         list.add(new SessionFragment());
         list.add(new ContactsFragment());
         list.add(new RoomsFragment());

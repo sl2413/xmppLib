@@ -22,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.Msg;
@@ -91,6 +92,7 @@ public class ChatActivity extends FragmentActivity {
     private FrameLayout fl_emogi;
     private LinearLayout ll_emogi;
     private LinearLayout ll_root;
+    private ImageView iv_roomPerson;
 
 
     @Override
@@ -111,6 +113,7 @@ public class ChatActivity extends FragmentActivity {
         fl_emogi = findViewById(R.id.fl_emogi);
         ll_emogi = findViewById(R.id.ll_emogi);
         ll_root = findViewById(R.id.ll_root);
+        iv_roomPerson = findViewById(R.id.iv_roomPerson);
     }
 
     private void initData() {
@@ -127,6 +130,7 @@ public class ChatActivity extends FragmentActivity {
         name = intent.getStringExtra("name");
         if (isGroup) {
             title.setText("在" + name + " 聊天室");
+            iv_roomPerson.setVisibility(View.VISIBLE);
         } else {
             title.setText("与 " + name + " 聊天中");
         }
@@ -210,6 +214,23 @@ public class ChatActivity extends FragmentActivity {
             }
         });
         if (isGroup) {
+            iv_roomPerson.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    XmppUtils.XmppGetRoomPerson(XmppUtils.muc, new XmppUtils.RoomPersonListener() {
+                        @Override
+                        public void Success(List<String> list) {
+
+                        }
+
+                        @Override
+                        public void Error(String error) {
+                            Toast.makeText(ChatActivity.this, error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
+            //监听群消息
             XmppUtils.XmppGroupMessage(new PacketListener() {
                 @Override
                 public void processPacket(Packet packet) {

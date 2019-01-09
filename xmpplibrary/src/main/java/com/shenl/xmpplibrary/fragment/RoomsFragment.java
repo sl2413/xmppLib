@@ -10,8 +10,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.activiity.ChatActivity;
 import com.shenl.xmpplibrary.service.MsgService;
@@ -38,6 +41,23 @@ public class RoomsFragment extends Fragment {
 
     private void initView(View view) {
         lv_room = view.findViewById(R.id.lv_room);
+        Button btn_SeePerson = view.findViewById(R.id.btn_SeePerson);
+        btn_SeePerson.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                XmppUtils.XmppGetRoomPerson(XmppUtils.muc, new XmppUtils.RoomPersonListener() {
+                    @Override
+                    public void Success(List<String> list) {
+
+                    }
+
+                    @Override
+                    public void Error(String error) {
+                        Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
     }
 
     private void initData() {

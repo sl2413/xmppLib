@@ -5,6 +5,12 @@
     android:background="@color/background"
     android:orientation="vertical">
 
+    <Button
+        android:id="@+id/btn_SeePerson"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="查看群成员"/>
+
     <ListView
         android:id="@+id/lv_room"
         android:layout_width="match_parent"
