@@ -135,7 +135,7 @@ public class XmppUtils {
         //开始登陆
         try {
             MsgService.xmppConnection.login(name, pswd, "Android");
-            XmppUtils.user = name +"@"+ sName;
+            XmppUtils.user = name + "@" + sName;
             mhandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -289,9 +289,7 @@ public class XmppUtils {
                     Collection<HostedRoom> hostrooms = MultiUserChat.getHostedRooms(MsgService.xmppConnection, "conference." + sName);
                     for (HostedRoom entry : hostrooms) {
                         list.add(entry);
-                        Log.i("shenl", "名字：" + entry.getName() + " - ID:" + entry.getJid());
                     }
-                    Log.i("shenl", "服务会议数量:" + list.size());
                     mhandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -370,7 +368,6 @@ public class XmppUtils {
             //history.setSince(new Date());
             // 用户加入聊天室
             muc.join(nickname, password, history, SmackConfiguration.getPacketReplyTimeout());
-            Log.e("shenl",nickname+"加入聊天室");
             listener.Success();
         } catch (XMPPException e) {
             listener.Error(e.getMessage());
@@ -380,14 +377,14 @@ public class XmppUtils {
 
     /**
      * TODO 功能：获取群聊成员
-     *
+     * <p>
      * 参数说明:必须在加入的房间内部调用，否则muc为空
      * 作    者:   沈 亮
      * 创建时间:   2019/1/9
      */
-    public static void XmppGetRoomPerson(MultiUserChat muc,RoomPersonListener listener){
-        if (muc == null){
-            Log.e("shenl","注:请在群聊内部查看成员");
+    public static void XmppGetRoomPerson(MultiUserChat muc, RoomPersonListener listener) {
+        if (muc == null) {
+            Log.e("shenl", "注:请在群聊内部查看成员");
         }
         List<String> listUser = new ArrayList<String>();
         Iterator<String> it = muc.getOccupants();
@@ -396,11 +393,10 @@ public class XmppUtils {
             // 聊天室成员名字
             String name = StringUtils.parseResource(it.next());
             listUser.add(name);
-            Log.e("shenl",name);
         }
-        if (listUser.size() > 0){
+        if (listUser.size() > 0) {
             listener.Success(listUser);
-        }else{
+        } else {
             listener.equals("未查到群成员列表");
         }
     }
@@ -525,12 +521,12 @@ public class XmppUtils {
 
     /**
      * TODO 功能：获取群成员列表
-     *
+     * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/9
      */
-    public interface RoomPersonListener{
+    public interface RoomPersonListener {
         void Success(List<String> list);
 
         void Error(String error);

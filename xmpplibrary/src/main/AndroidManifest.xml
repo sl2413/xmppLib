@@ -8,10 +8,9 @@
 
     <application>
         <activity android:name=".activiity.ChatActivity" />
-
         <service android:name=".service.MsgService" />
-
-        <activity android:name=".activiity.SeeImgActivity"></activity>
+        <activity android:name=".activiity.SeeImgActivity" />
+        <activity android:name=".activiity.RoomPersonActivity"/>
     </application>
 
 </manifest>

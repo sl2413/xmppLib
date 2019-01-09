@@ -187,7 +187,6 @@ public class ChatActivity extends FragmentActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-
                         //文件接收
                         IncomingFileTransfer transfer = request.accept();
                         //获取文件名字
@@ -230,17 +229,9 @@ public class ChatActivity extends FragmentActivity {
             iv_roomPerson.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    XmppUtils.XmppGetRoomPerson(XmppUtils.muc, new XmppUtils.RoomPersonListener() {
-                        @Override
-                        public void Success(List<String> list) {
-
-                        }
-
-                        @Override
-                        public void Error(String error) {
-                            Toast.makeText(ChatActivity.this, error, Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    Intent intent = new Intent(ChatActivity.this, RoomPersonActivity.class);
+                    intent.putExtra("title",name);
+                    startActivity(intent);
                 }
             });
             //监听群消息
