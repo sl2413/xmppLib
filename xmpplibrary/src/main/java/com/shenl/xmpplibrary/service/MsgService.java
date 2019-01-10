@@ -73,7 +73,6 @@ public class MsgService extends Service {
                     sessionBean.name = name;
                     MsgService.setSession(sessionBean);*/
                 }
-
                 Log.e("shenl", message.getBody());
             }
         });
