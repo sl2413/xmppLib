@@ -9,8 +9,8 @@ import android.support.v4.view.ViewPager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.shenl.utils.MyUtils.PageUtils;
 import com.shenl.xmpp.R;
+import com.shenl.xmpplibrary.fragment.AddFriendFragment;
 import com.shenl.xmpplibrary.fragment.ContactsFragment;
 import com.shenl.xmpplibrary.fragment.CreateRoomFragment;
 import com.shenl.xmpplibrary.fragment.RoomsFragment;
@@ -45,14 +45,12 @@ public class MainActivity extends FragmentActivity {
         tv_title = findViewById(R.id.tv_title);
         vp = findViewById(R.id.vp);
         tabs = findViewById(R.id.ll_toolbar);
-
-
-        PageUtils.showLog("用户＝＝"+XmppUtils.XmppGetJid());
     }
 
     public void initData() {
         list = new ArrayList<Fragment>();
         list.add(new CreateRoomFragment());
+        list.add(new AddFriendFragment());
         list.add(new SessionFragment());
         list.add(new ContactsFragment());
         list.add(new RoomsFragment());

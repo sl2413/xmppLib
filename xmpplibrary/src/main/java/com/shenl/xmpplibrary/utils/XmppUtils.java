@@ -2,7 +2,9 @@ package com.shenl.xmpplibrary.utils;
 
 import android.content.Context;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.TextureView;
 
 import com.shenl.xmpplibrary.service.MsgService;
 
@@ -11,13 +13,21 @@ import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.PacketCollector;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.filter.AndFilter;
+import org.jivesoftware.smack.filter.PacketFilter;
+import org.jivesoftware.smack.filter.PacketIDFilter;
+import org.jivesoftware.smack.filter.PacketTypeFilter;
+import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.Registration;
 import org.jivesoftware.smack.provider.PrivacyProvider;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.util.StringUtils;
@@ -168,7 +178,12 @@ public class XmppUtils {
         } catch (XMPPException e) {
             e.printStackTrace();
         }
-        return vCard.getNickName();
+        String nickName = vCard.getNickName();
+        if (TextUtils.isEmpty(nickName)){
+            String s = XmppGetJid();
+            nickName = s.substring(0,s.indexOf("@"));
+        }
+        return nickName;
     }
 
     /**
@@ -194,6 +209,106 @@ public class XmppUtils {
         }
         return FullJid;
     }
+
+    /**
+     * TODO 功能：注册账号
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/10
+     */
+    public static void XmppRegister(String account, String nickName,String password, XmppListener listener) {
+        Registration reg = new Registration();
+        reg.setType(IQ.Type.SET);
+        reg.setTo(MsgService.xmppConnection.getServiceName());
+        // 注意这里createAccount注册时，参数是UserName，不是jid，是"@"前面的部分。
+        reg.setUsername(account);
+        reg.setPassword(password);
+        //设置昵称（其余属性）
+        if (TextUtils.isEmpty(nickName)){
+            nickName = account;
+        }
+        reg.addAttribute("name", nickName);
+        // 这边addAttribute不能为空，否则出错。所以做个标志是android手机创建的吧！！！！！
+        reg.addAttribute("android", "geolo_createUser_android");
+        PacketFilter filter = new AndFilter(new PacketIDFilter(
+                reg.getPacketID()), new PacketTypeFilter(IQ.class));
+        PacketCollector collector = MsgService.xmppConnection.createPacketCollector(filter);
+        MsgService.xmppConnection.sendPacket(reg);
+        IQ result = (IQ) collector.nextResult(SmackConfiguration
+                .getPacketReplyTimeout());
+        // Stop queuing results停止请求results（是否成功的结果）
+        collector.cancel();
+        if (result == null) {
+            Log.e("regist", "No response from server.");
+            listener.Error("服务器没有返回结果");
+        } else if (result.getType() == IQ.Type.RESULT) {
+            Log.v("regist", "regist success.");
+            listener.Success();
+        } else { // if (result.getType() == IQ.Type.ERROR)
+            if (result.getError().toString().equalsIgnoreCase("conflict(409)")) {
+                Log.e("regist", "IQ.Type.ERROR: " + result.getError().toString());
+                listener.Error("账号已经存在");
+            } else {
+                Log.e("regist", "IQ.Type.ERROR: " + result.getError().toString());
+                listener.Error("注册失败");
+            }
+        }
+    }
+
+    /**
+     * TODO 功能：添加好友
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/10
+     */
+    public static void XmppAddFriend(String Jid, String Nickname,XmppListener listener) {
+        try {
+            if (!Jid.contains("@")){
+                Jid = Jid + "@"+sName;
+            }
+            if (TextUtils.isEmpty(Nickname)){
+                Nickname = Jid.substring(0,Jid.indexOf("@"));
+            }
+            MsgService.xmppConnection.getRoster().createEntry(Jid, Nickname, null);
+            //设置添加好友请求
+            Presence subscription = new Presence(Presence.Type.subscribe);
+            //拼接好友全称
+            subscription.setTo(Jid);
+            //发送请求
+            MsgService.xmppConnection.sendPacket(subscription);
+            listener.Success();
+        } catch (XMPPException e) {
+            listener.Error(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * TODO 功能：删除好友
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/10
+     */
+    public static void XmppDelUser(String Jid,XmppListener listener) {
+        try {
+            RosterEntry entry = null;
+            if (Jid.contains("@"))
+                entry = MsgService.xmppConnection.getRoster().getEntry(Jid);
+            else
+                entry = MsgService.xmppConnection.getRoster().getEntry(Jid);
+            if (entry == null)
+                entry = MsgService.xmppConnection.getRoster().getEntry(Jid);
+            MsgService.xmppConnection.getRoster().removeEntry(entry);
+            listener.Success();
+        } catch (Exception e) {
+            listener.Error(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 
     /**
      * TODO : 断开连接

@@ -13,6 +13,14 @@ import android.widget.Toast;
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
+
+/**
+ * TODO 功能：创建群聊页面fragment
+ *
+ * 参数说明:
+ * 作    者:   沈 亮
+ * 创建时间:   2019/1/10
+ */
 public class CreateRoomFragment extends Fragment {
 
     private EditText et_roomName;

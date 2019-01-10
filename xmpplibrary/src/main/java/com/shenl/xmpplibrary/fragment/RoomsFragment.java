@@ -24,6 +24,13 @@ import org.jivesoftware.smackx.muc.HostedRoom;
 
 import java.util.List;
 
+/**
+ * TODO 功能：服务器所有群页面fragment
+ *
+ * 参数说明:
+ * 作    者:   沈 亮
+ * 创建时间:   2019/1/10
+ */
 public class RoomsFragment extends Fragment {
 
     private ListView lv_room;

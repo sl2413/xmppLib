@@ -15,6 +15,13 @@ import android.widget.TextView;
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.activiity.ChatActivity;
 
+/**
+ * TODO 功能：聊天表情页面fragment
+ *
+ * 参数说明:
+ * 作    者:   沈 亮
+ * 创建时间:   2019/1/10
+ */
 public class EmojiFragment extends Fragment {
 
     //emoji表情地址

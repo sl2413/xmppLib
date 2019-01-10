@@ -32,6 +32,7 @@ public class LoginActivity extends BaseActivity {
         et_name = findViewById(R.id.et_name);
         et_pswd = findViewById(R.id.et_pswd);
         btn_login = findViewById(R.id.btn_login);
+        Button btn_register = findViewById(R.id.btn_register);
 
     }
 

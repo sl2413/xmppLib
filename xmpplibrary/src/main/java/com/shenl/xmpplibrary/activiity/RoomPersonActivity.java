@@ -15,6 +15,13 @@ import com.shenl.xmpplibrary.utils.XmppUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * TODO 功能：群成员列表页面activity
+ *
+ * 参数说明:
+ * 作    者:   沈 亮
+ * 创建时间:   2019/1/10
+ */
 public class RoomPersonActivity extends Activity {
 
     private TextView title;

@@ -49,6 +49,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * TODO 功能：聊天通讯页面activity
+ *
+ * 参数说明:
+ * 作    者:   沈 亮
+ * 创建时间:   2019/1/10
+ */
 public class ChatActivity extends FragmentActivity {
 
     private ListView listview;

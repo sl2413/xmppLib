@@ -13,6 +13,13 @@ import android.widget.ImageView;
 
 import com.shenl.xmpplibrary.R;
 
+/**
+ * TODO 功能：通讯中图片查看页面activity
+ *
+ * 参数说明:
+ * 作    者:   沈 亮
+ * 创建时间:   2019/1/10
+ */
 public class SeeImgActivity extends Activity {
 
     private ImageView iv_seeImg;

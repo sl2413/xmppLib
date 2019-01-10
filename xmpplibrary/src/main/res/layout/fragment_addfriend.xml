@@ -5,8 +5,7 @@
     android:background="@color/background"
     android:orientation="vertical">
 
-    <!--S 房间名称-->
-
+    <!--S 好友Jid-->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,9 +18,9 @@
             android:gravity="center_horizontal"
             android:textSize="18sp"
             android:textColor="#000"
-            android:text="群名称"/>
+            android:text="Jid"/>
         <EditText
-            android:id="@+id/et_roomName"
+            android:id="@+id/et_Jid"
             android:layout_width="0dp"
             android:layout_weight="2"
             android:layout_height="wrap_content"
@@ -29,18 +28,46 @@
             android:padding="5dp"
             android:textColor="#000"
             android:textColorHint="#33000000"
-            android:hint="输入群名称..."
+            android:hint="输入好友Jid..."
             android:layout_marginRight="20dp"
             android:background="@drawable/et_bgc"/>
     </LinearLayout>
-    <!--E 房间名称-->
+    <!--E 好友Jid-->
+    <!--S 好友昵称-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="5dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textSize="18sp"
+            android:textColor="#000"
+            android:text="昵称"/>
+        <EditText
+            android:id="@+id/et_Nickname"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:padding="5dp"
+            android:textColor="#000"
+            android:textColorHint="#33000000"
+            android:hint="输入好友昵称..."
+            android:layout_marginRight="20dp"
+            android:background="@drawable/et_bgc"/>
+    </LinearLayout>
+    <!--E 好友昵称-->
 
     <Button
-        android:id="@+id/btn_createroom"
+        android:id="@+id/btn_addFirend"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="15sp"
         android:background="@color/btn"
         android:layout_margin="10dp"
-        android:text="创建群聊"/>
+        android:text="添加好友"/>
 </LinearLayout>

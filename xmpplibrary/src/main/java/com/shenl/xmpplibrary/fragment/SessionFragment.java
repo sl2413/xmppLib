@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -18,6 +19,13 @@ import com.shenl.xmpplibrary.activiity.ChatActivity;
 import com.shenl.xmpplibrary.bean.sessionBean;
 import com.shenl.xmpplibrary.service.MsgService;
 
+/**
+ * TODO 功能：会话页面fragment
+ *
+ * 参数说明:
+ * 作    者:   沈 亮
+ * 创建时间:   2019/1/10
+ */
 public class SessionFragment extends Fragment {
 
     private ListView lv_session;
@@ -67,12 +75,17 @@ public class SessionFragment extends Fragment {
         lv_session.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, final int i, long l) {
+                View DialogView = View.inflate(getContext(), R.layout.dialog_view, null);
+                LinearLayout dialogV = DialogView.findViewById(R.id.ll_dialog_view);
                 TextView textView = new TextView(getContext());
-                textView.setText("删除条目");
+                textView.setText("删除会话");
                 textView.setTextSize(30);
                 textView.setPadding(8,8,8,8);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT);
+                textView.setLayoutParams(params);
+                dialogV.addView(textView);
                 final AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
-                builder.setView(textView);
+                builder.setView(DialogView);
                 final AlertDialog dialog = builder.show();
                 textView.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -118,8 +131,8 @@ public class SessionFragment extends Fragment {
             }
             TextView nickname = view.findViewById(R.id.nickname);
             TextView account = view.findViewById(R.id.account);
-            nickname.setText(MsgService.sessionList.get(i).user);
-            account.setText(MsgService.sessionList.get(i).name);
+            nickname.setText(MsgService.sessionList.get(i).name);
+            account.setText(MsgService.sessionList.get(i).user);
             return view;
         }
     }
