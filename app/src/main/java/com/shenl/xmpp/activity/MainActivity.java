@@ -15,7 +15,6 @@ import com.shenl.xmpplibrary.fragment.ContactsFragment;
 import com.shenl.xmpplibrary.fragment.CreateRoomFragment;
 import com.shenl.xmpplibrary.fragment.RoomsFragment;
 import com.shenl.xmpplibrary.fragment.SessionFragment;
-import com.shenl.xmpplibrary.utils.XmppUtils;
 
 import java.util.ArrayList;
 
@@ -38,7 +37,7 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        XmppUtils.XmppDisconnect();
+//        XmppUtils.XmppDisconnect();
     }
 
     public void initView() {

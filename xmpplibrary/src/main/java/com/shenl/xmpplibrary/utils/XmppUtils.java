@@ -1,6 +1,7 @@
 package com.shenl.xmpplibrary.utils;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
@@ -149,6 +150,11 @@ public class XmppUtils {
             mhandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    boolean b = ServiceUtils.isServiceWork(context, "com.shenl.xmpplibrary.service.MsgService");
+                    if (!b) {
+                        Intent intent = new Intent(context, MsgService.class);
+                        context.startService(intent);
+                    }
                     listener.Success();
                 }
             });
