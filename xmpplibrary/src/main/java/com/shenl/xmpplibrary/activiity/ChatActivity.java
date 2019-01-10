@@ -146,15 +146,7 @@ public class ChatActivity extends FragmentActivity {
         sessionBean.isGroup = isGroup;
         sessionBean.user = user;
         sessionBean.name = name;
-        boolean isAdd = true;
-        for (int i = 0; i < MsgService.sessionList.size(); i++) {
-            if (sessionBean.user.equals(MsgService.sessionList.get(i).user)) {
-                isAdd = false;
-            }
-        }
-        if (isAdd) {
-            MsgService.sessionList.add(sessionBean);
-        }
+        MsgService.setSession(sessionBean);
         list = new ArrayList<>();
         adapter = new MyAdapter();
         listview.setAdapter(adapter);

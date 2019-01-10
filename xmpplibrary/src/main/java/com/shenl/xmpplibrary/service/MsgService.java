@@ -25,6 +25,7 @@ import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smackx.packet.VCard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,25 @@ public class MsgService extends Service {
     public static XMPPConnection xmppConnection;
     public static String nickname;
     public static List<sessionBean> sessionList = new ArrayList<>();
+
+    /**
+     * TODO 功能：添加临时会话列表
+     *
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/10
+     */
+    public static void setSession(sessionBean sessionBean) {
+        boolean isAdd = true;
+        for (int i = 0; i < sessionList.size(); i++) {
+            if (sessionBean.user.equals(sessionList.get(i).user)) {
+                isAdd = false;
+            }
+        }
+        if (isAdd) {
+            sessionList.add(sessionBean);
+        }
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -45,9 +65,16 @@ public class MsgService extends Service {
         XmppUtils.XmppGetMessage(new MessageListener() {
             @Override
             public void processMessage(Chat chat, Message message) {
-                if (!TextUtils.isEmpty(message.getBody()))
-                showNotification("收到一条新消息......", "好友消息", message.getBody(), 1);
-                Log.e("shenl",message.getBody());
+                if (!TextUtils.isEmpty(message.getBody())){
+                    showNotification("收到一条新消息......", "好友消息", message.getBody(), 1);
+                    /*sessionBean sessionBean = new sessionBean();
+                    sessionBean.isGroup = isGroup;
+                    sessionBean.user = message.getFrom();
+                    sessionBean.name = name;
+                    MsgService.setSession(sessionBean);*/
+                }
+
+                Log.e("shenl", message.getBody());
             }
         });
         addSubscriptionListener();
@@ -100,7 +127,7 @@ public class MsgService extends Service {
 
     /**
      * TODO 功能：在手机状态栏显示通知
-     *
+     * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/10

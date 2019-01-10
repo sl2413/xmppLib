@@ -33,6 +33,11 @@ public class LoginActivity extends BaseActivity {
         et_pswd = findViewById(R.id.et_pswd);
         btn_login = findViewById(R.id.btn_login);
         Button btn_register = findViewById(R.id.btn_register);
+        btn_register.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+            }
+        });
 
     }
 

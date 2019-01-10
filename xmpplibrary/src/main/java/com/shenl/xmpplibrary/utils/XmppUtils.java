@@ -217,6 +217,25 @@ public class XmppUtils {
     }
 
     /**
+     * TODO 功能：获取用户信息
+     *
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/10
+     */
+    public static VCard XmppUserInfo(String Jid){
+        try {
+            if (vCard == null) {
+                vCard = new VCard();
+            }
+            vCard.load(MsgService.xmppConnection,Jid);
+        } catch (XMPPException e) {
+            e.printStackTrace();
+        }
+        return vCard;
+    }
+
+    /**
      * TODO 功能：注册账号
      * <p>
      * 参数说明:
@@ -259,6 +278,23 @@ public class XmppUtils {
                 Log.e("regist", "IQ.Type.ERROR: " + result.getError().toString());
                 listener.Error("注册失败");
             }
+        }
+    }
+
+    /**
+     * TODO 功能：修改登陆人密码
+     *
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/10
+     */
+    public static boolean XmppChangePswd(String newPswd){
+        try {
+            MsgService.xmppConnection.getAccountManager().changePassword(newPswd);
+            return true;
+        } catch (XMPPException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
