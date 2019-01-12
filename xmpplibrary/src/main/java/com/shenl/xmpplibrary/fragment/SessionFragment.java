@@ -17,11 +17,14 @@ import android.widget.TextView;
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.activiity.ChatActivity;
 import com.shenl.xmpplibrary.bean.sessionBean;
+import com.shenl.xmpplibrary.dao.ChatDao;
 import com.shenl.xmpplibrary.service.MsgService;
+
+import java.util.ArrayList;
 
 /**
  * TODO 功能：会话页面fragment
- *
+ * <p>
  * 参数说明:
  * 作    者:   沈 亮
  * 创建时间:   2019/1/10
@@ -30,6 +33,8 @@ public class SessionFragment extends Fragment {
 
     private ListView lv_session;
     private MyAdapter adapter;
+    private ArrayList<ChatDao.sessionBean> list;
+    private ChatDao dao;
 
     @Nullable
     @Override
@@ -44,7 +49,7 @@ public class SessionFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        if (adapter != null){
+        if (adapter != null) {
             adapter.notifyDataSetChanged();
         }
     }
@@ -54,6 +59,8 @@ public class SessionFragment extends Fragment {
     }
 
     private void initData() {
+        dao = new ChatDao(getContext());
+        list = dao.query(ChatDao.SESSION);
         adapter = new MyAdapter();
         lv_session.setAdapter(adapter);
     }
@@ -63,11 +70,12 @@ public class SessionFragment extends Fragment {
         lv_session.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                sessionBean sessionBean = MsgService.sessionList.get(i);
+//                sessionBean sessionBean = MsgService.sessionList.get(i);
+                ChatDao.sessionBean bean = list.get(i);
                 Intent intent = new Intent(getContext(), ChatActivity.class);
-                intent.putExtra("isGroup",sessionBean.isGroup);
-                intent.putExtra("user",sessionBean.user);
-                intent.putExtra("name",sessionBean.name);
+                intent.putExtra("isGroup", bean.isGroup);
+                intent.putExtra("user", bean.Jid);
+                intent.putExtra("name", bean.nick_name);
                 startActivity(intent);
             }
         });
@@ -80,19 +88,22 @@ public class SessionFragment extends Fragment {
                 TextView textView = new TextView(getContext());
                 textView.setText("删除会话");
                 textView.setTextSize(30);
-                textView.setPadding(8,8,8,8);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT);
+                textView.setPadding(8, 8, 8, 8);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
                 textView.setLayoutParams(params);
                 dialogV.addView(textView);
-                final AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+                final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                 builder.setView(DialogView);
                 final AlertDialog dialog = builder.show();
                 textView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         dialog.dismiss();
-                        MsgService.sessionList.remove(i);
-                        adapter.notifyDataSetChanged();
+                        int del = dao.del(ChatDao.SESSION, list.get(i).id);
+                        if (del > 0) {
+                            list.remove(i);
+                            adapter.notifyDataSetChanged();
+                        }
                     }
                 });
                 return true;
@@ -102,16 +113,16 @@ public class SessionFragment extends Fragment {
 
     /**
      * TODO 功能：会话列表适配器
-     *
+     * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/9
      */
-    class MyAdapter extends BaseAdapter{
+    class MyAdapter extends BaseAdapter {
 
         @Override
         public int getCount() {
-            return MsgService.sessionList.size();
+            return list.size();
         }
 
         @Override
@@ -126,13 +137,13 @@ public class SessionFragment extends Fragment {
 
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
-            if (view == null){
-                view = View.inflate(getContext(), R.layout.item_session,null);
+            if (view == null) {
+                view = View.inflate(getContext(), R.layout.item_session, null);
             }
             TextView nickname = view.findViewById(R.id.nickname);
             TextView account = view.findViewById(R.id.account);
-            nickname.setText(MsgService.sessionList.get(i).name);
-            account.setText(MsgService.sessionList.get(i).user);
+            nickname.setText(list.get(i).nick_name);
+            account.setText(list.get(i).Jid);
             return view;
         }
     }

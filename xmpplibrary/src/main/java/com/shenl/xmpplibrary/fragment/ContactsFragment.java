@@ -71,6 +71,7 @@ public class ContactsFragment extends Fragment {
                 Intent intent = new Intent(getContext(), ChatActivity.class);
                 intent.putExtra("user", list.get(position).getUser());
                 intent.putExtra("name", list.get(position).getName());
+                intent.putExtra("isGroup", "0");
                 getContext().startActivity(intent);
             }
         });

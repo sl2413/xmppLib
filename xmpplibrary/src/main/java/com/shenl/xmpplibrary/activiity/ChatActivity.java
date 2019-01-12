@@ -1,6 +1,7 @@
 package com.shenl.xmpplibrary.activiity;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -27,6 +28,7 @@ import android.widget.Toast;
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.Msg;
 import com.shenl.xmpplibrary.bean.sessionBean;
+import com.shenl.xmpplibrary.dao.ChatDao;
 import com.shenl.xmpplibrary.fragment.EmojiFragment;
 import com.shenl.xmpplibrary.service.MsgService;
 import com.shenl.xmpplibrary.utils.DateTimeUtils;
@@ -65,7 +67,7 @@ public class ChatActivity extends FragmentActivity {
     private List<Msg> list;
     private MyAdapter adapter;
     private String name;
-    private boolean isGroup;
+    private String isGroup;
     private boolean isEmogiShow;
     private Handler handler = new Handler() {
         public void handleMessage(android.os.Message msg) {
@@ -130,23 +132,26 @@ public class ChatActivity extends FragmentActivity {
         ft.replace(R.id.fl_emogi, new EmojiFragment());
         ft.commit();
         Intent intent = getIntent();
-        isGroup = intent.getBooleanExtra("isGroup", false);
+        isGroup = intent.getStringExtra("isGroup");
         user = intent.getStringExtra("user");
         if (user.indexOf("@") == -1) {
             user = user + "@" + XmppUtils.sName;
         }
         name = intent.getStringExtra("name");
-        if (isGroup) {
+        if ("1".equals(isGroup)) {
             title.setText("在" + name + " 聊天室");
             iv_roomPerson.setVisibility(View.VISIBLE);
         } else {
             title.setText("与 " + name + " 聊天中");
         }
-        sessionBean sessionBean = new sessionBean();
-        sessionBean.isGroup = isGroup;
-        sessionBean.user = user;
-        sessionBean.name = name;
-        MsgService.setSession(sessionBean);
+
+        ChatDao dao = new ChatDao(ChatActivity.this);
+        ContentValues values = new ContentValues();
+        values.put("jid",user);
+        values.put("nick_name",name);
+        values.put("isGroup",isGroup);
+        dao.Add(ChatDao.SESSION,values);
+
         list = new ArrayList<>();
         adapter = new MyAdapter();
         listview.setAdapter(adapter);
@@ -224,7 +229,7 @@ public class ChatActivity extends FragmentActivity {
                 }).start();
             }
         });
-        if (isGroup) {
+        if ("1".equals(isGroup)) {
             iv_roomPerson.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -344,7 +349,7 @@ public class ChatActivity extends FragmentActivity {
     public void send(View v) {
         final String body = et_body.getText().toString().trim();
         String dateStr = DateTimeUtils.formatDate(new Date());
-        if (isGroup) {
+        if ("1".equals(isGroup)) {
             XmppUtils.XmppSendGroupMessage(body, new XmppUtils.XmppListener() {
                 @Override
                 public void Success() {

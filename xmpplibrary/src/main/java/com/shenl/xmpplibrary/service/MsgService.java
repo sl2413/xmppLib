@@ -34,26 +34,6 @@ public class MsgService extends Service {
 
     public static XMPPConnection xmppConnection;
     public static String nickname;
-    public static List<sessionBean> sessionList = new ArrayList<>();
-
-    /**
-     * TODO 功能：添加临时会话列表
-     *
-     * 参数说明:
-     * 作    者:   沈 亮
-     * 创建时间:   2019/1/10
-     */
-    public static void setSession(sessionBean sessionBean) {
-        boolean isAdd = true;
-        for (int i = 0; i < sessionList.size(); i++) {
-            if (sessionBean.user.equals(sessionList.get(i).user)) {
-                isAdd = false;
-            }
-        }
-        if (isAdd) {
-            sessionList.add(sessionBean);
-        }
-    }
 
     @Override
     public IBinder onBind(Intent intent) {

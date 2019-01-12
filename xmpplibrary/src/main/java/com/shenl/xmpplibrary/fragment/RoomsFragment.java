@@ -76,7 +76,7 @@ public class RoomsFragment extends Fragment {
                         Intent intent = new Intent(getContext(), ChatActivity.class);
                         intent.putExtra("user", Glist.get(position).getJid());
                         intent.putExtra("name", Glist.get(position).getName());
-                        intent.putExtra("isGroup", true);
+                        intent.putExtra("isGroup", "1");
                         getContext().startActivity(intent);
                     }
 
