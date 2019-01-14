@@ -60,7 +60,7 @@ public class AddFriendFragment extends Fragment {
                     et_jid.setError("好友Jid不能为空");
                     return;
                 }
-                XmppUtils.XmppAddFriend(Jid, nickName, new XmppUtils.XmppListener() {
+                XmppUtils.XmppAddFriend(getContext(),Jid, nickName, new XmppUtils.XmppListener() {
                     @Override
                     public void Success() {
                         et_jid.setText("");

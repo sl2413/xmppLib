@@ -1,7 +1,9 @@
 package com.shenl.xmpplibrary.fragment;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -9,8 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
+import android.widget.CursorAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -18,17 +19,15 @@ import android.widget.Toast;
 
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.activiity.ChatActivity;
-import com.shenl.xmpplibrary.dao.ChatDao;
 import com.shenl.xmpplibrary.service.MsgService;
+import com.shenl.xmpplibrary.utils.ViewHolder;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
 import org.jivesoftware.smack.Roster;
-import org.jivesoftware.smack.RosterEntry;
 import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.packet.Presence;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * TODO 功能：好友列表页面fragment
@@ -40,7 +39,6 @@ import java.util.List;
 public class ContactsFragment extends Fragment {
 
     private ListView lv_contact;
-    private List<ChatDao.sessionBean> list;
     private MyAdapter adapter;
 
     @Nullable
@@ -59,8 +57,8 @@ public class ContactsFragment extends Fragment {
     }
 
     private void initData() {
-        list = XmppUtils.XmppContacts(getContext());
-        adapter = new MyAdapter();
+        Cursor cursor = XmppUtils.XmppContacts(getContext());
+        adapter = new MyAdapter(getContext(),cursor);
         lv_contact.setAdapter(adapter);
     }
 
@@ -69,9 +67,11 @@ public class ContactsFragment extends Fragment {
         lv_contact.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Cursor cursor = adapter.getCursor();
+                cursor.moveToPosition(position);
                 Intent intent = new Intent(getContext(), ChatActivity.class);
-                intent.putExtra("user", list.get(position).Jid);
-                intent.putExtra("name", list.get(position).nickName);
+                intent.putExtra("user", cursor.getString(1));
+                intent.putExtra("name", cursor.getString(2));
                 intent.putExtra("isGroup", "0");
                 getContext().startActivity(intent);
             }
@@ -79,7 +79,9 @@ public class ContactsFragment extends Fragment {
         //好友列表条目条长按事件
         lv_contact.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, final int i, long l) {
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, final int position, long l) {
+                final Cursor cursor = adapter.getCursor();
+                cursor.moveToPosition(position);
                 View DialogView = View.inflate(getContext(), R.layout.dialog_view, null);
                 LinearLayout dialogV = DialogView.findViewById(R.id.ll_dialog_view);
                 /*  S 所添加的条目　*/
@@ -98,7 +100,7 @@ public class ContactsFragment extends Fragment {
                     @Override
                     public void onClick(View view) {
                         dialog.dismiss();
-                        XmppUtils.XmppDelUser(list.get(i).Jid, new XmppUtils.XmppListener() {
+                        XmppUtils.XmppDelUser(cursor.getString(cursor.getColumnIndex("Jid")), new XmppUtils.XmppListener() {
                             @Override
                             public void Success() {
                                 Toast.makeText(getContext(), "删除成功", Toast.LENGTH_SHORT).show();
@@ -120,60 +122,42 @@ public class ContactsFragment extends Fragment {
         roster.addRosterListener(new RosterListener() {
             @Override
             public void entriesAdded(Collection<String> collection) {
-                if (!list.isEmpty()) {
-                    list.clear();
-                }
-                list = XmppUtils.XmppContacts(getContext());
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (adapter != null) {
-                            adapter.notifyDataSetChanged();
-                        } else {
-                            adapter = new MyAdapter();
-                        }
-                    }
-                });
+                RefreshList();
             }
 
             @Override
             public void entriesUpdated(Collection<String> collection) {
-                if (!list.isEmpty()) {
-                    list.clear();
-                }
-                list = XmppUtils.XmppContacts(getContext());
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (adapter != null) {
-                            adapter.notifyDataSetChanged();
-                        } else {
-                            adapter = new MyAdapter();
-                        }
-                    }
-                });
+                RefreshList();
             }
 
             @Override
             public void entriesDeleted(Collection<String> collection) {
-                if (!list.isEmpty()) {
-                    list.clear();
-                }
-                list = XmppUtils.XmppContacts(getContext());
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (adapter != null) {
-                            adapter.notifyDataSetChanged();
-                        } else {
-                            adapter = new MyAdapter();
-                        }
-                    }
-                });
+                RefreshList();
             }
 
             @Override
             public void presenceChanged(Presence presence) {
+            }
+        });
+    }
+
+    /**
+     * TODO : 刷新页面
+     * 参数说明 :
+     * 作者 : shenl
+     * 创建日期 : 2019/1/14
+     * @return :
+     */
+    private void RefreshList() {
+        final Cursor cursor = XmppUtils.XmppContacts(getContext());
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                } else {
+                    adapter = new MyAdapter(getContext(),cursor);
+                }
             }
         });
     }
@@ -185,34 +169,30 @@ public class ContactsFragment extends Fragment {
      * 作    者:   沈 亮
      * 创建时间:   2019/1/10
      */
-    class MyAdapter extends BaseAdapter {
+    class MyAdapter extends CursorAdapter {
 
-        @Override
-        public int getCount() {
-            return list.size();
+        public MyAdapter(Context context, Cursor c) {
+            super(context, c,0);
         }
 
         @Override
-        public Object getItem(int position) {
-            return null;
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            ViewHolder viewHolder= new ViewHolder();
+            View view=View.inflate(getContext(),R.layout.item_list ,null);
+
+            viewHolder.head=view.findViewById(R.id.head );
+            viewHolder.nickname=view.findViewById(R.id.nickname );
+            viewHolder.Remarks=view.findViewById(R.id.Remarks );
+            view.setTag(viewHolder);
+            return view;
         }
 
         @Override
-        public long getItemId(int position) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = View.inflate(getContext(), R.layout.item_contact, null);
-            }
-            ImageView head = convertView.findViewById(R.id.head);
-            TextView nickname = convertView.findViewById(R.id.nickname);
-            TextView account = convertView.findViewById(R.id.account);
-            nickname.setText(list.get(position).nickName);
-            account.setText(list.get(position).Jid);
-            return convertView;
+        public void bindView(View view, Context context, Cursor cursor) {
+            ViewHolder viewHolder=(ViewHolder) view.getTag();
+            viewHolder.nickname.setText(cursor.getString(2));
+            viewHolder.Remarks.setText(cursor.getString(1));
+            viewHolder.head.setBadgeVisible(false);
         }
     }
 }

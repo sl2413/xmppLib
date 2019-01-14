@@ -1,26 +1,30 @@
 package com.shenl.xmpplibrary.fragment;
 
 import android.app.AlertDialog;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.CursorAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.activiity.ChatActivity;
-import com.shenl.xmpplibrary.bean.sessionBean;
 import com.shenl.xmpplibrary.dao.ChatDao;
-import com.shenl.xmpplibrary.service.MsgService;
+import com.shenl.xmpplibrary.utils.BadgeButton;
+import com.shenl.xmpplibrary.utils.ViewHolder;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,7 +38,6 @@ public class SessionFragment extends Fragment {
 
     private ListView lv_session;
     private MyAdapter adapter;
-    private List<ChatDao.sessionBean> list;
     private ChatDao dao;
 
     @Nullable
@@ -47,13 +50,6 @@ public class SessionFragment extends Fragment {
         return view;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (adapter != null) {
-            adapter.notifyDataSetChanged();
-        }
-    }
 
     private void initView(View view) {
         lv_session = view.findViewById(R.id.lv_session);
@@ -61,8 +57,8 @@ public class SessionFragment extends Fragment {
 
     private void initData() {
         dao = new ChatDao(getContext());
-        list = dao.query(ChatDao.SESSIONLIST);
-        adapter = new MyAdapter();
+        Cursor cursor = dao.query(ChatDao.SESSIONLIST);
+        adapter = new MyAdapter(getContext(), cursor);
         lv_session.setAdapter(adapter);
     }
 
@@ -70,20 +66,25 @@ public class SessionFragment extends Fragment {
         //会话列表条目点击事件
         lv_session.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                sessionBean sessionBean = MsgService.sessionList.get(i);
-                ChatDao.sessionBean bean = list.get(i);
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                Cursor cursor = adapter.getCursor();
+                cursor.moveToPosition(position);
+                ContentValues values = new ContentValues();
+                values.put("UnReadCount","");
+                dao.upd(ChatDao.SESSIONLIST,values,cursor.getString(1));
                 Intent intent = new Intent(getContext(), ChatActivity.class);
-                intent.putExtra("isGroup", bean.isGroup);
-                intent.putExtra("user", bean.Jid);
-                intent.putExtra("name", bean.nickName);
+                intent.putExtra("isGroup", cursor.getString(7));
+                intent.putExtra("user", cursor.getString(1));
+                intent.putExtra("name",cursor.getString(2));
                 startActivity(intent);
             }
         });
         //会话列表条目长按事件
         lv_session.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, final int i, long l) {
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, final int position, long l) {
+                final Cursor cursor = adapter.getCursor();
+                cursor.moveToPosition(position);
                 View DialogView = View.inflate(getContext(), R.layout.dialog_view, null);
                 LinearLayout dialogV = DialogView.findViewById(R.id.ll_dialog_view);
                 TextView textView = new TextView(getContext());
@@ -100,11 +101,7 @@ public class SessionFragment extends Fragment {
                     @Override
                     public void onClick(View view) {
                         dialog.dismiss();
-                        int del = dao.del(ChatDao.SESSIONLIST, list.get(i).id);
-                        if (del > 0) {
-                            list.remove(i);
-                            adapter.notifyDataSetChanged();
-                        }
+                        int del = dao.del(ChatDao.SESSIONLIST, cursor.getString(0));
                     }
                 });
                 return true;
@@ -119,33 +116,35 @@ public class SessionFragment extends Fragment {
      * 作    者:   沈 亮
      * 创建时间:   2019/1/9
      */
-    class MyAdapter extends BaseAdapter {
+    class MyAdapter extends CursorAdapter {
 
-        @Override
-        public int getCount() {
-            return list.size();
+        public MyAdapter(Context context, Cursor c) {
+            super(context, c, 0);
         }
 
         @Override
-        public Object getItem(int i) {
-            return null;
-        }
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            ViewHolder viewHolder= new ViewHolder();
+            View view=View.inflate(getContext(),R.layout.item_list ,null);
 
-        @Override
-        public long getItemId(int i) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
-            if (view == null) {
-                view = View.inflate(getContext(), R.layout.item_session, null);
-            }
-            TextView nickname = view.findViewById(R.id.nickname);
-            TextView account = view.findViewById(R.id.account);
-            nickname.setText(list.get(i).nickName);
-            account.setText(list.get(i).Jid);
+            viewHolder.head=view.findViewById(R.id.head );
+            viewHolder.nickname=view.findViewById(R.id.nickname );
+            viewHolder.Remarks=view.findViewById(R.id.Remarks );
+            view.setTag(viewHolder);
             return view;
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            ViewHolder viewHolder=(ViewHolder) view.getTag();
+            viewHolder.nickname.setText(cursor.getString(2));
+            viewHolder.Remarks.setText(cursor.getString(4));
+            if (TextUtils.isEmpty(cursor.getString(6))) {
+                viewHolder.head.setBadgeVisible(false);
+            } else {
+                viewHolder.head.setBadgeVisible(true);
+                viewHolder.head.setBadgeText(cursor.getString(6));
+            }
         }
     }
 }

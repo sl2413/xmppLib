@@ -110,8 +110,9 @@ public class ChatDao {
      *
      * @return : 所影响数据的个数。0 为没有修改
      */
-    public int upd(String table, ContentValues values, String id) {
-        return db.update(table, values, "_id = ?", new String[]{id});
+    public int upd(String table, ContentValues values, String Jid) {
+        int update = db.update(table, values, "Jid = ?", new String[]{Jid});
+        return update;
     }
 
     /**
@@ -122,7 +123,7 @@ public class ChatDao {
      *
      * @return :
      */
-    public List<sessionBean> query(String table) {
+    public Cursor query(String table) {
         //String table,
         //String[] columns,查询的字段
         //String selection,查询的条件
@@ -132,16 +133,7 @@ public class ChatDao {
         //String orderBy,排序
         //String limit 分页
         Cursor cursor = db.query(table, null, null, null, null, null, null, null);
-        List<sessionBean> list = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            sessionBean bean = new sessionBean();
-            bean.id = cursor.getString(0);
-            bean.Jid = cursor.getString(1);
-            bean.nickName = cursor.getString(2);
-            bean.isGroup = cursor.getString(3);
-            list.add(bean);
-        }
-        return list;
+        return cursor;
     }
 
     /**
@@ -190,7 +182,7 @@ public class ChatDao {
         return bean;
     }
 
-    public class FriendBean {
+    public static class FriendBean {
         public String id;
         public String Jid;
         public String nickName;

@@ -57,30 +57,33 @@ public class MsgService extends Service {
         XmppUtils.XmppGetMessage(new MessageListener() {
             @Override
             public void processMessage(Chat chat, Message message) {
-                if (!TextUtils.isEmpty(message.getBody())){
+                if (!TextUtils.isEmpty(message.getBody())) {
                     String user = message.getFrom();
-                    user = user.substring(0,user.indexOf("/"));
-                    String name = user.substring(0,user.indexOf("@"));
+                    user = user.substring(0, user.indexOf("/"));
                     ChatDao dao = new ChatDao(MsgService.this);
                     ChatDao.FriendBean friendBean = dao.queryInfo(user);
                     showNotification("收到一条新消息......", "好友消息", message.getBody(), 1);
-                    ContentValues sessionValue = new ContentValues();
-                    sessionValue.put("Jid",user);
-                    sessionValue.put("nickName",friendBean.nickName);
-                    sessionValue.put("head",friendBean.head);
-                    sessionValue.put("content",message.getBody());
-                    sessionValue.put("contentType",SystemInfo.TEXT);
-                    sessionValue.put("isGroup","0");
-
                     ChatDao.sessionBean sessionBean = dao.querySession(user);
-                    if (sessionBean == null){
-                        sessionValue.put("UnReadCount",1);
-                        dao.Add(ChatDao.SESSIONLIST,sessionValue);
-                        Log.e("shenl","新增");
-                    }else{
-                        sessionValue.put("UnReadCount",(Integer.parseInt(sessionBean.UnReadCount)+1)+"");
-                        dao.upd(ChatDao.GOODFRIEND,sessionValue,user);
-                        Log.e("shenl","更新"+sessionBean.UnReadCount);
+                    if (sessionBean == null) {
+                        ContentValues sessionValue = new ContentValues();
+                        sessionValue.put("Jid", user);
+                        sessionValue.put("nickName", friendBean.nickName);
+                        sessionValue.put("head", friendBean.head);
+                        sessionValue.put("content", message.getBody());
+                        sessionValue.put("contentType", SystemInfo.TEXT);
+                        sessionValue.put("isGroup", "0");
+                        sessionValue.put("UnReadCount", 1);
+                        dao.Add(ChatDao.SESSIONLIST, sessionValue);
+                        Log.e("shenl", "新增");
+                    } else {
+                        ContentValues sessionValue = new ContentValues();
+                        sessionValue.put("content", message.getBody());
+                        if (TextUtils.isEmpty(sessionBean.UnReadCount)){
+                            sessionValue.put("UnReadCount",1);
+                        }else{
+                            sessionValue.put("UnReadCount",Integer.parseInt(sessionBean.UnReadCount)+1);
+                        }
+                        int upd = dao.upd(ChatDao.SESSIONLIST, sessionValue, user);
                     }
                 }
             }

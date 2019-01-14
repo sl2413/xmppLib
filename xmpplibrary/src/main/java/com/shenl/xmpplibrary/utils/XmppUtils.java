@@ -3,10 +3,10 @@ package com.shenl.xmpplibrary.utils;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.TextureView;
 
 import com.shenl.xmpplibrary.dao.ChatDao;
 import com.shenl.xmpplibrary.service.MsgService;
@@ -307,7 +307,7 @@ public class XmppUtils {
      * 作    者:   沈 亮
      * 创建时间:   2019/1/10
      */
-    public static void XmppAddFriend(String Jid, String Nickname,XmppListener listener) {
+    public static void XmppAddFriend(Context context,String Jid, String Nickname,XmppListener listener) {
         try {
             if (!Jid.contains("@")){
                 Jid = Jid + "@"+sName;
@@ -322,6 +322,12 @@ public class XmppUtils {
             subscription.setTo(Jid);
             //发送请求
             MsgService.xmppConnection.sendPacket(subscription);
+            ChatDao dao = new ChatDao(context);
+            ContentValues values = new ContentValues();
+            values.put("Jid",Jid);
+            values.put("nickName",Nickname);
+            values.put("head","");
+            dao.Add(ChatDao.GOODFRIEND,values);
             listener.Success();
         } catch (XMPPException e) {
             listener.Error(e.getMessage());
@@ -374,7 +380,7 @@ public class XmppUtils {
      *
      * @return :
      */
-    public static List<ChatDao.sessionBean> XmppContacts(Context context) {
+    public static Cursor XmppContacts(Context context) {
         Roster roster = MsgService.xmppConnection.getRoster();
         Collection<RosterEntry> entries = roster.getEntries();
         ChatDao dao = new ChatDao(context);
@@ -385,8 +391,8 @@ public class XmppUtils {
             values.put("head","");
             dao.Add(ChatDao.GOODFRIEND,values);
         }
-        List<ChatDao.sessionBean> list = dao.query(ChatDao.GOODFRIEND);
-        return list;
+        Cursor cursor = dao.query(ChatDao.GOODFRIEND);
+        return cursor;
     }
 
     /**

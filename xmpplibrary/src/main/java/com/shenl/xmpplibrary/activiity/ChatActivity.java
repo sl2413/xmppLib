@@ -113,6 +113,14 @@ public class ChatActivity extends FragmentActivity {
         initEvent();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ChatDao dao = new ChatDao(ChatActivity.this);
+        ContentValues values = new ContentValues();
+        values.put("UnReadCount","");
+        dao.upd(ChatDao.SESSIONLIST,values,user);
+    }
 
     private void initView() {
         title = findViewById(R.id.title);
