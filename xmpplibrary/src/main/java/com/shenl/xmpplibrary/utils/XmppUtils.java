@@ -1,5 +1,6 @@
 package com.shenl.xmpplibrary.utils;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -7,6 +8,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.TextureView;
 
+import com.shenl.xmpplibrary.dao.ChatDao;
 import com.shenl.xmpplibrary.service.MsgService;
 
 import org.jivesoftware.smack.Chat;
@@ -372,13 +374,18 @@ public class XmppUtils {
      *
      * @return :
      */
-    public static List<RosterEntry> XmppContacts() {
+    public static List<ChatDao.sessionBean> XmppContacts(Context context) {
         Roster roster = MsgService.xmppConnection.getRoster();
         Collection<RosterEntry> entries = roster.getEntries();
-        List<RosterEntry> list = new ArrayList<>();
+        ChatDao dao = new ChatDao(context);
         for (RosterEntry entry : entries) {
-            list.add(entry);
+            ContentValues values = new ContentValues();
+            values.put("Jid",entry.getUser());
+            values.put("nickName",entry.getName());
+            values.put("head","");
+            dao.Add(ChatDao.GOODFRIEND,values);
         }
+        List<ChatDao.sessionBean> list = dao.query(ChatDao.GOODFRIEND);
         return list;
     }
 

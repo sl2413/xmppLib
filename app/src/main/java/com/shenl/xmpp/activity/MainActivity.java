@@ -9,16 +9,15 @@ import android.support.v4.view.ViewPager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.shenl.utils.MyUtils.PageUtils;
 import com.shenl.xmpp.R;
 import com.shenl.xmpplibrary.fragment.AddFriendFragment;
 import com.shenl.xmpplibrary.fragment.ContactsFragment;
 import com.shenl.xmpplibrary.fragment.CreateRoomFragment;
 import com.shenl.xmpplibrary.fragment.RoomsFragment;
 import com.shenl.xmpplibrary.fragment.SessionFragment;
-import com.shenl.xmpplibrary.utils.XmppUtils;
 
 import java.util.ArrayList;
+
 
 public class MainActivity extends FragmentActivity {
 
@@ -47,11 +46,6 @@ public class MainActivity extends FragmentActivity {
         vp = findViewById(R.id.vp);
         tabs = findViewById(R.id.ll_toolbar);
 
-        if (XmppUtils.XmppChangePswd("1")){
-            PageUtils.showLog("成功");
-        }else{
-            PageUtils.showLog("失败");
-        }
     }
 
     public void initData() {
@@ -74,9 +68,10 @@ public class MainActivity extends FragmentActivity {
      * 参数说明 :
      * 作者 : shenl
      * 创建日期 : 2018/12/26
+     *
      * @return :
      */
-    class MyAdapter extends FragmentPagerAdapter{
+    class MyAdapter extends FragmentPagerAdapter {
 
         public MyAdapter(FragmentManager fm) {
             super(fm);
@@ -92,4 +87,5 @@ public class MainActivity extends FragmentActivity {
             return list.size();
         }
     }
+
 }

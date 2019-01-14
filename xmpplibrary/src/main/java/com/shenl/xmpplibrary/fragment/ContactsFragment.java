@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.activiity.ChatActivity;
+import com.shenl.xmpplibrary.dao.ChatDao;
 import com.shenl.xmpplibrary.service.MsgService;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
@@ -39,7 +40,7 @@ import java.util.List;
 public class ContactsFragment extends Fragment {
 
     private ListView lv_contact;
-    private List<RosterEntry> list;
+    private List<ChatDao.sessionBean> list;
     private MyAdapter adapter;
 
     @Nullable
@@ -58,7 +59,7 @@ public class ContactsFragment extends Fragment {
     }
 
     private void initData() {
-        list = XmppUtils.XmppContacts();
+        list = XmppUtils.XmppContacts(getContext());
         adapter = new MyAdapter();
         lv_contact.setAdapter(adapter);
     }
@@ -69,8 +70,8 @@ public class ContactsFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(getContext(), ChatActivity.class);
-                intent.putExtra("user", list.get(position).getUser());
-                intent.putExtra("name", list.get(position).getName());
+                intent.putExtra("user", list.get(position).Jid);
+                intent.putExtra("name", list.get(position).nickName);
                 intent.putExtra("isGroup", "0");
                 getContext().startActivity(intent);
             }
@@ -97,7 +98,7 @@ public class ContactsFragment extends Fragment {
                     @Override
                     public void onClick(View view) {
                         dialog.dismiss();
-                        XmppUtils.XmppDelUser(list.get(i).getUser(), new XmppUtils.XmppListener() {
+                        XmppUtils.XmppDelUser(list.get(i).Jid, new XmppUtils.XmppListener() {
                             @Override
                             public void Success() {
                                 Toast.makeText(getContext(), "删除成功", Toast.LENGTH_SHORT).show();
@@ -122,7 +123,7 @@ public class ContactsFragment extends Fragment {
                 if (!list.isEmpty()) {
                     list.clear();
                 }
-                list = XmppUtils.XmppContacts();
+                list = XmppUtils.XmppContacts(getContext());
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -140,7 +141,7 @@ public class ContactsFragment extends Fragment {
                 if (!list.isEmpty()) {
                     list.clear();
                 }
-                list = XmppUtils.XmppContacts();
+                list = XmppUtils.XmppContacts(getContext());
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -158,7 +159,7 @@ public class ContactsFragment extends Fragment {
                 if (!list.isEmpty()) {
                     list.clear();
                 }
-                list = XmppUtils.XmppContacts();
+                list = XmppUtils.XmppContacts(getContext());
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -209,8 +210,8 @@ public class ContactsFragment extends Fragment {
             ImageView head = convertView.findViewById(R.id.head);
             TextView nickname = convertView.findViewById(R.id.nickname);
             TextView account = convertView.findViewById(R.id.account);
-            nickname.setText(list.get(position).getName());
-            account.setText(list.get(position).getUser());
+            nickname.setText(list.get(position).nickName);
+            account.setText(list.get(position).Jid);
             return convertView;
         }
     }

@@ -3,7 +3,9 @@ package com.shenl.xmpplibrary.service;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -14,7 +16,10 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.shenl.xmpplibrary.R;
+import com.shenl.xmpplibrary.activiity.ChatActivity;
 import com.shenl.xmpplibrary.bean.sessionBean;
+import com.shenl.xmpplibrary.dao.ChatDao;
+import com.shenl.xmpplibrary.utils.SystemInfo;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
 import org.jivesoftware.smack.Chat;
@@ -41,19 +46,43 @@ public class MsgService extends Service {
     }
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        //返回 START_STICKY或START_REDELIVER_INTENT
+        return START_STICKY;
+    }
+
+
+    @Override
     public void onCreate() {
         XmppUtils.XmppGetMessage(new MessageListener() {
             @Override
             public void processMessage(Chat chat, Message message) {
                 if (!TextUtils.isEmpty(message.getBody())){
+                    String user = message.getFrom();
+                    user = user.substring(0,user.indexOf("/"));
+                    String name = user.substring(0,user.indexOf("@"));
+                    ChatDao dao = new ChatDao(MsgService.this);
+                    ChatDao.FriendBean friendBean = dao.queryInfo(user);
                     showNotification("收到一条新消息......", "好友消息", message.getBody(), 1);
-                    /*sessionBean sessionBean = new sessionBean();
-                    sessionBean.isGroup = isGroup;
-                    sessionBean.user = message.getFrom();
-                    sessionBean.name = name;
-                    MsgService.setSession(sessionBean);*/
+                    ContentValues sessionValue = new ContentValues();
+                    sessionValue.put("Jid",user);
+                    sessionValue.put("nickName",friendBean.nickName);
+                    sessionValue.put("head",friendBean.head);
+                    sessionValue.put("content",message.getBody());
+                    sessionValue.put("contentType",SystemInfo.TEXT);
+                    sessionValue.put("isGroup","0");
+
+                    ChatDao.sessionBean sessionBean = dao.querySession(user);
+                    if (sessionBean == null){
+                        sessionValue.put("UnReadCount",1);
+                        dao.Add(ChatDao.SESSIONLIST,sessionValue);
+                        Log.e("shenl","新增");
+                    }else{
+                        sessionValue.put("UnReadCount",(Integer.parseInt(sessionBean.UnReadCount)+1)+"");
+                        dao.upd(ChatDao.GOODFRIEND,sessionValue,user);
+                        Log.e("shenl","更新"+sessionBean.UnReadCount);
+                    }
                 }
-                Log.e("shenl", message.getBody());
             }
         });
         addSubscriptionListener();
@@ -121,11 +150,13 @@ public class MsgService extends Service {
         builder.setSmallIcon(R.mipmap.ic_launcher);
         builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
         Notification notification = builder.build();
+        notification.defaults = Notification.DEFAULT_SOUND; //设置为默认的声音
         manger.notify(flag, notification);
-        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+        /*Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         if (uri == null) return;
         Ringtone r = RingtoneManager.getRingtone(MsgService.this, uri);
-        r.play();
+        r.play();*/
     }
 
     @Override

@@ -21,6 +21,7 @@ import com.shenl.xmpplibrary.dao.ChatDao;
 import com.shenl.xmpplibrary.service.MsgService;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * TODO 功能：会话页面fragment
@@ -33,7 +34,7 @@ public class SessionFragment extends Fragment {
 
     private ListView lv_session;
     private MyAdapter adapter;
-    private ArrayList<ChatDao.sessionBean> list;
+    private List<ChatDao.sessionBean> list;
     private ChatDao dao;
 
     @Nullable
@@ -60,7 +61,7 @@ public class SessionFragment extends Fragment {
 
     private void initData() {
         dao = new ChatDao(getContext());
-        list = dao.query(ChatDao.SESSION);
+        list = dao.query(ChatDao.SESSIONLIST);
         adapter = new MyAdapter();
         lv_session.setAdapter(adapter);
     }
@@ -75,7 +76,7 @@ public class SessionFragment extends Fragment {
                 Intent intent = new Intent(getContext(), ChatActivity.class);
                 intent.putExtra("isGroup", bean.isGroup);
                 intent.putExtra("user", bean.Jid);
-                intent.putExtra("name", bean.nick_name);
+                intent.putExtra("name", bean.nickName);
                 startActivity(intent);
             }
         });
@@ -99,7 +100,7 @@ public class SessionFragment extends Fragment {
                     @Override
                     public void onClick(View view) {
                         dialog.dismiss();
-                        int del = dao.del(ChatDao.SESSION, list.get(i).id);
+                        int del = dao.del(ChatDao.SESSIONLIST, list.get(i).id);
                         if (del > 0) {
                             list.remove(i);
                             adapter.notifyDataSetChanged();
@@ -142,7 +143,7 @@ public class SessionFragment extends Fragment {
             }
             TextView nickname = view.findViewById(R.id.nickname);
             TextView account = view.findViewById(R.id.account);
-            nickname.setText(list.get(i).nick_name);
+            nickname.setText(list.get(i).nickName);
             account.setText(list.get(i).Jid);
             return view;
         }

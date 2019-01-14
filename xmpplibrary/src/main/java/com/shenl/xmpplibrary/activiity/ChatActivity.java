@@ -93,7 +93,6 @@ public class ChatActivity extends FragmentActivity {
                     list.add(m3);
                     adapter.notifyDataSetChanged();
                     listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
-
                     break;
             }
         }
@@ -145,12 +144,6 @@ public class ChatActivity extends FragmentActivity {
             title.setText("与 " + name + " 聊天中");
         }
 
-        ChatDao dao = new ChatDao(ChatActivity.this);
-        ContentValues values = new ContentValues();
-        values.put("jid",user);
-        values.put("nick_name",name);
-        values.put("isGroup",isGroup);
-        dao.Add(ChatDao.SESSION,values);
 
         list = new ArrayList<>();
         adapter = new MyAdapter();
@@ -195,7 +188,7 @@ public class ChatActivity extends FragmentActivity {
                         IncomingFileTransfer transfer = request.accept();
                         //获取文件名字
                         String fileName = transfer.getFileName();
-                        //本地创建文件
+                        //本地创建文件+
                         File sdCardDir = new File(getCacheDir().getPath() + "/xmpp");
                         if (!sdCardDir.exists()) {//判断文件夹目录是否存在
                             sdCardDir.mkdir();//如果不存在则创建
@@ -259,7 +252,7 @@ public class ChatActivity extends FragmentActivity {
             });
         } else {
             //消息监听器
-            XmppUtils.XmppGetMessage(new MessageListener() {
+            /*XmppUtils.XmppGetMessage(new MessageListener() {
                 @Override
                 public void processMessage(Chat chat, Message message) {
                     Log.e("shenl", message.getBody());
@@ -275,7 +268,7 @@ public class ChatActivity extends FragmentActivity {
                         msg.sendToTarget();
                     }
                 }
-            });
+            });*/
         }
     }
 
