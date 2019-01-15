@@ -1,9 +1,11 @@
 package com.shenl.xmpplibrary.fragment;
 
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,7 +15,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.CursorAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -22,10 +23,7 @@ import android.widget.TextView;
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.activiity.ChatActivity;
 import com.shenl.xmpplibrary.dao.ChatDao;
-import com.shenl.xmpplibrary.utils.BadgeButton;
 import com.shenl.xmpplibrary.utils.ViewHolder;
-
-import java.util.List;
 
 /**
  * TODO 功能：会话页面fragment
@@ -39,6 +37,7 @@ public class SessionFragment extends Fragment {
     private ListView lv_session;
     private MyAdapter adapter;
     private ChatDao dao;
+    private Cursor cursor;
 
     @Nullable
     @Override
@@ -50,14 +49,25 @@ public class SessionFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        Refresh();
+    }
 
     private void initView(View view) {
         lv_session = view.findViewById(R.id.lv_session);
     }
 
     private void initData() {
+        //动态注册广播接收器
+        MsgReceiver msgReceiver = new MsgReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.shenl.xmpplibrary.fragment.SessionFragment.MsgReceiver");
+        getContext().registerReceiver(msgReceiver, intentFilter);
+
         dao = new ChatDao(getContext());
-        Cursor cursor = dao.query(ChatDao.SESSIONLIST);
+        cursor = dao.query(ChatDao.SESSIONLIST);
         adapter = new MyAdapter(getContext(), cursor);
         lv_session.setAdapter(adapter);
     }
@@ -70,12 +80,15 @@ public class SessionFragment extends Fragment {
                 Cursor cursor = adapter.getCursor();
                 cursor.moveToPosition(position);
                 ContentValues values = new ContentValues();
-                values.put("UnReadCount","");
-                dao.upd(ChatDao.SESSIONLIST,values,cursor.getString(1));
+                values.put("UnReadCount", "");
+                int upd = dao.upd(ChatDao.SESSIONLIST, values, cursor.getString(1));
+                if (upd != 0){
+                    Refresh();
+                }
                 Intent intent = new Intent(getContext(), ChatActivity.class);
                 intent.putExtra("isGroup", cursor.getString(7));
                 intent.putExtra("user", cursor.getString(1));
-                intent.putExtra("name",cursor.getString(2));
+                intent.putExtra("name", cursor.getString(2));
                 startActivity(intent);
             }
         });
@@ -101,12 +114,41 @@ public class SessionFragment extends Fragment {
                     @Override
                     public void onClick(View view) {
                         dialog.dismiss();
-                        int del = dao.del(ChatDao.SESSIONLIST, cursor.getString(0));
+                        int del = dao.del(ChatDao.SESSIONLIST,cursor.getString(0));
+                        if (del != 0){
+                            Refresh();
+                        }
                     }
                 });
                 return true;
             }
         });
+    }
+
+    /**
+     * TODO 功能：刷新页面
+     *
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/15
+     */
+    private void Refresh() {
+        cursor.requery();
+        adapter.notifyDataSetChanged();
+    }
+
+    /**
+     * TODO 功能：接收消息广播
+     *
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/15
+     */
+    public class MsgReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Refresh();
+        }
     }
 
     /**
@@ -124,26 +166,26 @@ public class SessionFragment extends Fragment {
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            ViewHolder viewHolder= new ViewHolder();
-            View view=View.inflate(getContext(),R.layout.item_list ,null);
-
-            viewHolder.head=view.findViewById(R.id.head );
-            viewHolder.nickname=view.findViewById(R.id.nickname );
-            viewHolder.Remarks=view.findViewById(R.id.Remarks );
+            ViewHolder viewHolder = new ViewHolder();
+            View view = View.inflate(getContext(), R.layout.item_list, null);
+            viewHolder.head = view.findViewById(R.id.head);
+            viewHolder.count = view.findViewById(R.id.count);
+            viewHolder.nickname = view.findViewById(R.id.nickname);
+            viewHolder.Remarks = view.findViewById(R.id.Remarks);
             view.setTag(viewHolder);
             return view;
         }
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            ViewHolder viewHolder=(ViewHolder) view.getTag();
+            ViewHolder viewHolder = (ViewHolder) view.getTag();
             viewHolder.nickname.setText(cursor.getString(2));
             viewHolder.Remarks.setText(cursor.getString(4));
             if (TextUtils.isEmpty(cursor.getString(6))) {
-                viewHolder.head.setBadgeVisible(false);
+                viewHolder.count.setVisibility(View.GONE);
             } else {
-                viewHolder.head.setBadgeVisible(true);
-                viewHolder.head.setBadgeText(cursor.getString(6));
+                viewHolder.count.setVisibility(View.VISIBLE);
+                viewHolder.count.setText(cursor.getString(6));
             }
         }
     }

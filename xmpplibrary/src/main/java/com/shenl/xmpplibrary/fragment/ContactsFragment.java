@@ -181,6 +181,7 @@ public class ContactsFragment extends Fragment {
             View view=View.inflate(getContext(),R.layout.item_list ,null);
 
             viewHolder.head=view.findViewById(R.id.head );
+            viewHolder.count=view.findViewById(R.id.count );
             viewHolder.nickname=view.findViewById(R.id.nickname );
             viewHolder.Remarks=view.findViewById(R.id.Remarks );
             view.setTag(viewHolder);
@@ -192,7 +193,7 @@ public class ContactsFragment extends Fragment {
             ViewHolder viewHolder=(ViewHolder) view.getTag();
             viewHolder.nickname.setText(cursor.getString(2));
             viewHolder.Remarks.setText(cursor.getString(1));
-            viewHolder.head.setBadgeVisible(false);
+            viewHolder.count.setVisibility(View.GONE);
         }
     }
 }

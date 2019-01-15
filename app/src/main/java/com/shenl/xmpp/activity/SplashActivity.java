@@ -7,13 +7,16 @@ import android.util.Log;
 
 import com.shenl.utils.activity.BaseActivity;
 import com.shenl.xmpp.R;
+import com.shenl.xmpplibrary.bean.Msg;
 import com.shenl.xmpplibrary.dao.ChatDao;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
+import java.util.List;
+
 public class SplashActivity extends BaseActivity {
 
-//    public static final String sarviceName = "172.30.4.15";
-    public static final String sarviceName = "192.168.99.3";
+    public static final String sarviceName = "172.30.4.15";
+//    public static final String sarviceName = "192.168.99.3";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +25,7 @@ public class SplashActivity extends BaseActivity {
         initView();
         initData();
         initEvent();
+
     }
 
     @Override

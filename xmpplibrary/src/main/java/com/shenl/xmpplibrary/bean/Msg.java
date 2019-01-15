@@ -6,10 +6,7 @@ public class Msg {
     private String date;
     private String title;
     private String myself;
-    private String img_path;
-
-    public Msg() {
-    }
+    private String imgPath;
 
     public Msg(String date, String name, String title, String myself) {
         this.date = date;
@@ -23,7 +20,7 @@ public class Msg {
         this.name = name;
         this.title = title;
         this.myself = myself;
-        this.img_path = img_path;
+        this.imgPath = img_path;
     }
 
     public String getName() {
@@ -59,10 +56,10 @@ public class Msg {
     }
 
     public String getImg_path() {
-        return img_path;
+        return imgPath;
     }
 
     public void setImg_path(String img_path) {
-        this.img_path = img_path;
+        this.imgPath = img_path;
     }
 }

@@ -5,20 +5,15 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.BitmapFactory;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.shenl.xmpplibrary.R;
-import com.shenl.xmpplibrary.activiity.ChatActivity;
-import com.shenl.xmpplibrary.bean.sessionBean;
 import com.shenl.xmpplibrary.dao.ChatDao;
+import com.shenl.xmpplibrary.utils.DateTimeUtils;
 import com.shenl.xmpplibrary.utils.SystemInfo;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
@@ -30,15 +25,15 @@ import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smackx.packet.VCard;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Date;
 
 public class MsgService extends Service {
 
     public static XMPPConnection xmppConnection;
     public static String nickname;
+    private Intent intent = new Intent("com.shenl.xmpplibrary.fragment.SessionFragment.MsgReceiver");
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -62,8 +57,19 @@ public class MsgService extends Service {
                     user = user.substring(0, user.indexOf("/"));
                     ChatDao dao = new ChatDao(MsgService.this);
                     ChatDao.FriendBean friendBean = dao.queryInfo(user);
-                    showNotification("收到一条新消息......", "好友消息", message.getBody(), 1);
+                    //缓存聊天记录
+                    final String dateStr = DateTimeUtils.formatDate(new Date());
+                    ContentValues sessionValues = new ContentValues();
+                    sessionValues.put("FromJid",user);
+                    sessionValues.put("ToJid",XmppUtils.XmppGetJid());
+                    sessionValues.put("name",friendBean.nickName);
+                    sessionValues.put("data",dateStr);
+                    sessionValues.put("title",message.getBody());
+                    sessionValues.put("myself","IN");
+                    sessionValues.put("imgPath","");
+                    dao.Add(ChatDao.MESSAGE,sessionValues);
                     ChatDao.sessionBean sessionBean = dao.querySession(user);
+                    showNotification("收到一条新消息......", "好友消息", message.getBody(), Integer.parseInt(sessionBean.id));
                     if (sessionBean == null) {
                         ContentValues sessionValue = new ContentValues();
                         sessionValue.put("Jid", user);
@@ -73,8 +79,10 @@ public class MsgService extends Service {
                         sessionValue.put("contentType", SystemInfo.TEXT);
                         sessionValue.put("isGroup", "0");
                         sessionValue.put("UnReadCount", 1);
-                        dao.Add(ChatDao.SESSIONLIST, sessionValue);
-                        Log.e("shenl", "新增");
+                        long add = dao.Add(ChatDao.SESSIONLIST, sessionValue);
+                        if (add != -1){
+                            sendBroadcast(intent);
+                        }
                     } else {
                         ContentValues sessionValue = new ContentValues();
                         sessionValue.put("content", message.getBody());
@@ -84,6 +92,9 @@ public class MsgService extends Service {
                             sessionValue.put("UnReadCount",Integer.parseInt(sessionBean.UnReadCount)+1);
                         }
                         int upd = dao.upd(ChatDao.SESSIONLIST, sessionValue, user);
+                        if (upd != 0){
+                            sendBroadcast(intent);
+                        }
                     }
                 }
             }

@@ -1,8 +1,13 @@
 package com.shenl.xmpplibrary.activiity;
 
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -11,11 +16,14 @@ import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
+import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -23,11 +31,9 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.shenl.xmpplibrary.R;
 import com.shenl.xmpplibrary.bean.Msg;
-import com.shenl.xmpplibrary.bean.sessionBean;
 import com.shenl.xmpplibrary.dao.ChatDao;
 import com.shenl.xmpplibrary.fragment.EmojiFragment;
 import com.shenl.xmpplibrary.service.MsgService;
@@ -35,8 +41,6 @@ import com.shenl.xmpplibrary.utils.DateTimeUtils;
 import com.shenl.xmpplibrary.utils.ImageUtils;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
@@ -47,13 +51,12 @@ import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
 import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 /**
  * TODO 功能：聊天通讯页面activity
- *
+ * <p>
  * 参数说明:
  * 作    者:   沈 亮
  * 创建时间:   2019/1/10
@@ -64,12 +67,11 @@ public class ChatActivity extends FragmentActivity {
     private EditText et_body;
     private TextView title;
     private String user;
-    private List<Msg> list;
     private MyAdapter adapter;
     private String name;
     private String isGroup;
     private boolean isEmogiShow;
-    private Handler handler = new Handler() {
+    /*private Handler handler = new Handler() {
         public void handleMessage(android.os.Message msg) {
             String[] args = (String[]) msg.obj;
             switch (msg.what) {
@@ -96,12 +98,15 @@ public class ChatActivity extends FragmentActivity {
                     break;
             }
         }
-    };
+    };*/
     private ImageView iv_emogi;
     private FrameLayout fl_emogi;
     private LinearLayout ll_emogi;
     private LinearLayout ll_root;
     private ImageView iv_roomPerson;
+    private ChatDao dao;
+    private Cursor cursor;
+    private ChatDao.sessionBean sessionBean;
 
 
     @Override
@@ -116,10 +121,19 @@ public class ChatActivity extends FragmentActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (sessionBean != null) {
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            //移除标记为id的通知 (只是针对当前Context下的所有Notification)
+            notificationManager.cancel(Integer.parseInt(sessionBean.id));
+        }
         ChatDao dao = new ChatDao(ChatActivity.this);
         ContentValues values = new ContentValues();
-        values.put("UnReadCount","");
-        dao.upd(ChatDao.SESSIONLIST,values,user);
+        values.put("UnReadCount", "");
+        int upd = dao.upd(ChatDao.SESSIONLIST, values, user);
+        if (upd != 0) {
+            Intent intent = new Intent("com.shenl.xmpplibrary.fragment.SessionFragment.MsgReceiver");
+            sendBroadcast(intent);
+        }
     }
 
     private void initView() {
@@ -134,6 +148,13 @@ public class ChatActivity extends FragmentActivity {
     }
 
     private void initData() {
+        //动态注册广播接收器
+        MsgReceiver msgReceiver = new MsgReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.shenl.xmpplibrary.fragment.SessionFragment.MsgReceiver");
+        registerReceiver(msgReceiver, intentFilter);
+
+        dao = new ChatDao(ChatActivity.this);
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
         ft.replace(R.id.fl_emogi, new EmojiFragment());
@@ -152,10 +173,16 @@ public class ChatActivity extends FragmentActivity {
             title.setText("与 " + name + " 聊天中");
         }
 
-
-        list = new ArrayList<>();
-        adapter = new MyAdapter();
+        cursor = dao.query(user, XmppUtils.XmppGetJid());
+        adapter = new MyAdapter(ChatActivity.this, cursor);
         listview.setAdapter(adapter);
+        listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
+        sessionBean = dao.querySession(user);
+        if (sessionBean != null) {
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            //移除标记为id的通知 (只是针对当前Context下的所有Notification)
+            notificationManager.cancel(Integer.parseInt(sessionBean.id));
+        }
     }
 
 
@@ -217,11 +244,11 @@ public class ChatActivity extends FragmentActivity {
                             //判断是否完全接收文件
                             if (transfer.isDone()) {
                                 String[] args = new String[]{name, save_path};
-                                android.os.Message msg = handler.obtainMessage();
+                                /*android.os.Message msg = handler.obtainMessage();
                                 msg.what = 2;
                                 msg.obj = args;
                                 //发送msg,刷新adapter显示图片
-                                msg.sendToTarget();
+                                msg.sendToTarget();*/
                             }
                         } catch (XMPPException e) {
                             e.printStackTrace();
@@ -235,7 +262,7 @@ public class ChatActivity extends FragmentActivity {
                 @Override
                 public void onClick(View view) {
                     Intent intent = new Intent(ChatActivity.this, RoomPersonActivity.class);
-                    intent.putExtra("title",name);
+                    intent.putExtra("title", name);
                     startActivity(intent);
                 }
             });
@@ -251,10 +278,10 @@ public class ChatActivity extends FragmentActivity {
                     if (!nameOrGroup[1].equals(MsgService.nickname)) {
                         String[] args = new String[]{nameOrGroup[1], message.getBody()};
                         // 在handler里取出来显示消息
-                        android.os.Message msg = handler.obtainMessage();
+                        /*android.os.Message msg = handler.obtainMessage();
                         msg.what = 1;
                         msg.obj = args;
-                        msg.sendToTarget();
+                        msg.sendToTarget();*/
                     }
                 }
             });
@@ -317,15 +344,14 @@ public class ChatActivity extends FragmentActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.e("shenl", user);
                 XmppUtils.XmppSendFile(user + "/Spark", new File(path), new XmppUtils.XmppListener() {
                     @Override
                     public void Success() {
                         String[] args = new String[]{MsgService.nickname, path};
-                        android.os.Message msg = handler.obtainMessage();
+                        /*android.os.Message msg = handler.obtainMessage();
                         msg.what = 3;
                         msg.obj = args;
-                        msg.sendToTarget();
+                        msg.sendToTarget();*/
                         Log.e("shenl", "发送成功");
                     }
 
@@ -349,7 +375,7 @@ public class ChatActivity extends FragmentActivity {
      */
     public void send(View v) {
         final String body = et_body.getText().toString().trim();
-        String dateStr = DateTimeUtils.formatDate(new Date());
+        final String dateStr = DateTimeUtils.formatDate(new Date());
         if ("1".equals(isGroup)) {
             XmppUtils.XmppSendGroupMessage(body, new XmppUtils.XmppListener() {
                 @Override
@@ -368,7 +394,6 @@ public class ChatActivity extends FragmentActivity {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.e("shenl", user);
                     XmppUtils.XmppSendMessage(user, msg, new XmppUtils.XmppListener() {
                         @Override
                         public void Success() {
@@ -383,12 +408,49 @@ public class ChatActivity extends FragmentActivity {
                 }
             }).start();
         }
-        // 发送消息
-        list.add(new Msg(dateStr, MsgService.nickname, body, "OUT"));
-        // 刷新适配器
+
+        //缓存聊天记录
+        ContentValues values = new ContentValues();
+        values.put("FromJid", user);
+        values.put("ToJid", XmppUtils.XmppGetJid());
+        values.put("name", XmppUtils.XmppGetNickName());
+        values.put("data", dateStr);
+        values.put("title", body);
+        values.put("myself", "OUT");
+        values.put("imgPath", "");
+        dao.Add(ChatDao.MESSAGE, values);
+        Refresh();
+        et_body.setText("");
+    }
+
+    /**
+     * TODO 功能：刷新页面
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/15
+     */
+    private void Refresh() {
+        cursor.requery();
         adapter.notifyDataSetChanged();
         listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
-        et_body.setText("");
+    }
+
+    /**
+     * TODO 功能：接收消息广播
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/15
+     */
+    public class MsgReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (sessionBean == null) {
+                sessionBean = dao.querySession(user);
+            }
+            Refresh();
+        }
     }
 
 
@@ -428,63 +490,57 @@ public class ChatActivity extends FragmentActivity {
      *
      * @return :
      */
-    class MyAdapter extends BaseAdapter {
+    class MyAdapter extends CursorAdapter {
 
-        @Override
-        public int getCount() {
-            return list.size();
+        public MyAdapter(Context context, Cursor c) {
+            super(context, c, 0);
         }
 
         @Override
-        public Object getItem(int position) {
-            return list.get(position);
+        public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
+            ViewHolder holder = new ViewHolder();
+            View view = View.inflate(ChatActivity.this, R.layout.item_chat_list, null);
+            holder.llLeft = view.findViewById(R.id.ll_chat_left);
+            holder.llRight = view.findViewById(R.id.ll_chat_right);
+            holder.rec_name = view.findViewById(R.id.rec_name);
+            holder.tvDate = view.findViewById(R.id.tv_chat_date);
+            holder.tvTitle = view.findViewById(R.id.tv_chat_title);
+            holder.tvTitle2 = view.findViewById(R.id.tv_chat_title2);
+            holder.iv_left = view.findViewById(R.id.iv_left);
+            holder.iv_right = view.findViewById(R.id.iv_right);
+            view.setTag(holder);
+            return view;
         }
 
         @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder holder = null;
-            if (convertView == null) {
-                holder = new ViewHolder();
-                convertView = View.inflate(ChatActivity.this, R.layout.item_chat_list, null);
-                holder.llLeft = convertView.findViewById(R.id.ll_chat_left);
-                holder.llRight = convertView.findViewById(R.id.ll_chat_right);
-                holder.rec_name = convertView.findViewById(R.id.rec_name);
-                holder.tvDate = convertView.findViewById(R.id.tv_chat_date);
-                holder.tvTitle = convertView.findViewById(R.id.tv_chat_title);
-                holder.tvTitle2 = convertView.findViewById(R.id.tv_chat_title2);
-                holder.iv_left = convertView.findViewById(R.id.iv_left);
-                holder.iv_right = convertView.findViewById(R.id.iv_right);
-                convertView.setTag(holder);
-            } else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-            final Msg msg = list.get(position);
-            holder.tvDate.setText(msg.getDate());
-            String myself = msg.getMyself();
+        public void bindView(View view, Context context, Cursor cursor) {
+            ViewHolder holder = (ViewHolder) view.getTag();
+//            final Msg msg = list.get(position);
+            String name = cursor.getString(3);
+            String data = cursor.getString(4);
+            String title = cursor.getString(5);
+            String myself = cursor.getString(6);
+            final String imgPath = cursor.getString(7);
+            holder.tvDate.setText(data);
             if (myself.equals("IN")) {
                 holder.llLeft.setVisibility(View.VISIBLE);
                 holder.llRight.setVisibility(View.GONE);
-                holder.rec_name.setText(msg.getName());
-                if (msg.getTitle() != null && !msg.getTitle().isEmpty()) {
-                    holder.tvTitle.setText(msg.getTitle());
+                holder.rec_name.setText(name);
+                if (!TextUtils.isEmpty(title)) {
+                    holder.tvTitle.setText(title);
                     holder.tvTitle.setVisibility(View.VISIBLE);
                     holder.iv_left.setVisibility(View.GONE);
                 } else {
                     holder.tvTitle.setVisibility(View.GONE);
                     holder.iv_left.setVisibility(View.VISIBLE);
-                    Bitmap bitmap = BitmapFactory.decodeFile(msg.getImg_path());
+                    Bitmap bitmap = BitmapFactory.decodeFile(imgPath);
                     holder.iv_left.setImageBitmap(bitmap);
                     //查看收到图片
                     holder.iv_left.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             Intent intent = new Intent(ChatActivity.this, SeeImgActivity.class);
-                            intent.putExtra("imgPath", msg.getImg_path());
+                            intent.putExtra("imgPath", imgPath);
                             startActivity(intent);
                         }
                     });
@@ -492,28 +548,27 @@ public class ChatActivity extends FragmentActivity {
             } else if (myself.equals("OUT")) {
                 holder.llLeft.setVisibility(View.GONE);
                 holder.llRight.setVisibility(View.VISIBLE);
-                holder.tvTitle2.setText(msg.getTitle());
-                if (msg.getTitle() != null && !msg.getTitle().isEmpty()) {
-                    holder.tvTitle2.setText(msg.getTitle());
+                holder.tvTitle2.setText(title);
+                if (!TextUtils.isEmpty(title)) {
+                    holder.tvTitle2.setText(title);
                     holder.tvTitle2.setVisibility(View.VISIBLE);
                     holder.iv_right.setVisibility(View.GONE);
                 } else {
                     holder.tvTitle2.setVisibility(View.GONE);
                     holder.iv_right.setVisibility(View.VISIBLE);
-                    Bitmap bitmap = BitmapFactory.decodeFile(msg.getImg_path());
+                    Bitmap bitmap = BitmapFactory.decodeFile(imgPath);
                     holder.iv_right.setImageBitmap(bitmap);
                     //查看发出图片
                     holder.iv_right.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             Intent intent = new Intent(ChatActivity.this, SeeImgActivity.class);
-                            intent.putExtra("imgPath", msg.getImg_path());
+                            intent.putExtra("imgPath", imgPath);
                             startActivity(intent);
                         }
                     });
                 }
             }
-            return convertView;
         }
 
         class ViewHolder {

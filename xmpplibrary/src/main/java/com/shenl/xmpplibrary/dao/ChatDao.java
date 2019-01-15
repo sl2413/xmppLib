@@ -4,8 +4,10 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Message;
 import android.util.Log;
 
+import com.shenl.xmpplibrary.bean.Msg;
 import com.shenl.xmpplibrary.bean.sessionBean;
 import com.shenl.xmpplibrary.db.ChatDB;
 
@@ -41,12 +43,12 @@ public class ChatDao {
      * 参数说明:<br>
      * _id ==>列表id<br>
      * FromJid ==>发送消息的人员id<br>
-     * FromName ==>发送消息的人员昵称<br>
      * ToJid ==>收到消息的人员id<br>
-     * ToName ==>收到消息的人员昵称<br>
-     * MsgTime ==>消息的时间<br>
-     * Content ==>消息的内容<br>
-     * ContentType ==>内容的类型<br>
+     * name ==>人员的昵称<br>
+     * date ==>消息的时间<br>
+     * title ==>消息的内容<br>
+     * myself ==>收发标识<br>
+     * imgPath ==>图片路径<br>
      * 作    者:   沈 亮
      * 创建时间:   2019/1/14
      */
@@ -99,7 +101,7 @@ public class ChatDao {
      * @return : 返回删除满足条件数据的个数。0 为没有删除
      */
     public int del(String table, String id) {
-        return db.delete(table, "_id = ?", new String[]{id});
+            return db.delete(table, "_id = ?", new String[]{id});
     }
 
     /**
@@ -137,6 +139,24 @@ public class ChatDao {
     }
 
     /**
+     * TODO 功能：查询聊天记录
+     * <p>
+     * 参数说明:
+     * 作    者:   沈 亮
+     * 创建时间:   2019/1/15
+     */
+    public Cursor query(String FromJid, String ToJid) {
+        List<Msg> list = new ArrayList<>();
+        Cursor cursor = db.query(MESSAGE, null, "FromJid = ? AND ToJid = ?", new String[]{FromJid, ToJid}, null, null, null, null);
+        cursor.moveToFirst();
+       /* while (cursor.moveToNext()){
+            //String date, String name, String title, String myself, String img_path
+            list.add(new Msg(cursor.getString(4),cursor.getString(3),cursor.getString(5),cursor.getString(6),cursor.getString(7)));
+        }*/
+        return cursor;
+    }
+
+    /**
      * TODO 功能：查询好友的信息
      * <p>
      * 参数说明:
@@ -151,7 +171,6 @@ public class ChatDao {
         bean.Jid = cursor.getString(1);
         bean.nickName = cursor.getString(2);
         bean.head = cursor.getString(3);
-        Log.e("shenl","好友信息..."+bean.toString());
         return bean;
     }
 
@@ -166,7 +185,7 @@ public class ChatDao {
         Cursor cursor = db.query(ChatDao.SESSIONLIST, null, "Jid=?", new String[]{Jid}, null, null, null);
         cursor.moveToFirst();
         sessionBean bean = new sessionBean();
-        if (cursor.getCount() != 0){
+        if (cursor.getCount() != 0) {
             bean.id = cursor.getString(0);
             bean.Jid = cursor.getString(1);
             bean.nickName = cursor.getString(2);
@@ -175,8 +194,7 @@ public class ChatDao {
             bean.contentType = cursor.getString(5);
             bean.UnReadCount = cursor.getString(6);
             bean.isGroup = cursor.getString(7);
-            Log.e("shenl","临时信息..."+bean.toString());
-        }else{
+        } else {
             bean = null;
         }
         return bean;
@@ -187,16 +205,6 @@ public class ChatDao {
         public String Jid;
         public String nickName;
         public String head;
-
-        @Override
-        public String toString() {
-            return "FriendBean{" +
-                    "id='" + id + '\'' +
-                    ", Jid='" + Jid + '\'' +
-                    ", nickName='" + nickName + '\'' +
-                    ", head='" + head + '\'' +
-                    '}';
-        }
     }
 
     public class sessionBean {
@@ -208,20 +216,6 @@ public class ChatDao {
         public String contentType;
         public String UnReadCount;
         public String isGroup;
-
-        @Override
-        public String toString() {
-            return "sessionBean{" +
-                    "id='" + id + '\'' +
-                    ", Jid='" + Jid + '\'' +
-                    ", nickName='" + nickName + '\'' +
-                    ", head='" + head + '\'' +
-                    ", content='" + content + '\'' +
-                    ", contentType='" + contentType + '\'' +
-                    ", UnReadCount='" + UnReadCount + '\'' +
-                    ", isGroup='" + isGroup + '\'' +
-                    '}';
-        }
     }
 
 }
