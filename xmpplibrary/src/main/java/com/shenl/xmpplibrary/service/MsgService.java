@@ -47,11 +47,11 @@ public class MsgService extends Service {
         return null;
     }
 
-    @Override
+    /*@Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         //返回 START_STICKY或START_REDELIVER_INTENT
         return START_STICKY;
-    }
+    }*/
 
 
     @Override

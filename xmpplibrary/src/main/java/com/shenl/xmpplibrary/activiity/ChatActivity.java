@@ -80,6 +80,7 @@ public class ChatActivity extends FragmentActivity {
     private ChatDao dao;
     private Cursor cursor;
     private ChatDao.sessionBean sessionBean;
+    private MsgReceiver msgReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +94,7 @@ public class ChatActivity extends FragmentActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(msgReceiver);
         if (sessionBean != null) {
             NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             //移除标记为id的通知 (只是针对当前Context下的所有Notification)
@@ -121,7 +123,7 @@ public class ChatActivity extends FragmentActivity {
 
     private void initData() {
         //动态注册广播接收器
-        MsgReceiver msgReceiver = new MsgReceiver();
+        msgReceiver = new MsgReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("com.shenl.xmpplibrary.fragment.SessionFragment.MsgReceiver");
         registerReceiver(msgReceiver, intentFilter);

@@ -15,8 +15,9 @@ import java.util.List;
 
 public class SplashActivity extends BaseActivity {
 
-    public static final String sarviceName = "172.30.4.15";
-//    public static final String sarviceName = "192.168.99.3";
+//    public static final String sarviceName = "172.30.4.15";
+    public static final String ip = "192.168.99.3";
+    public static final String sName = "user-20180811pi";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +31,7 @@ public class SplashActivity extends BaseActivity {
 
     @Override
     public void initView() {
-        XmppUtils.XmppConnect(SplashActivity.this, sarviceName, 5222,sarviceName,new XmppUtils.XmppListener() {
+        XmppUtils.XmppConnect(SplashActivity.this, ip, 5222,sName,new XmppUtils.XmppListener() {
             @Override
             public void Success() {
 

@@ -39,6 +39,7 @@ public class SessionFragment extends Fragment {
     private MyAdapter adapter;
     private ChatDao dao;
     private Cursor cursor;
+    private MsgReceiver msgReceiver;
 
     @Nullable
     @Override
@@ -56,13 +57,19 @@ public class SessionFragment extends Fragment {
         Refresh();
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getContext().unregisterReceiver(msgReceiver);
+    }
+
     private void initView(View view) {
         lv_session = view.findViewById(R.id.lv_session);
     }
 
     private void initData() {
         //动态注册广播接收器
-        MsgReceiver msgReceiver = new MsgReceiver();
+        msgReceiver = new MsgReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("com.shenl.xmpplibrary.fragment.SessionFragment.MsgReceiver");
         getContext().registerReceiver(msgReceiver, intentFilter);
@@ -86,7 +93,7 @@ public class SessionFragment extends Fragment {
                 String Jid = cursor.getString(1);
                 String name = cursor.getString(2);
                 int upd = dao.upd(ChatDao.SESSIONLIST, values, Jid);
-                if (upd != 0){
+                if (upd != 0) {
                     Refresh();
                 }
                 Intent intent = new Intent(getContext(), ChatActivity.class);
@@ -118,8 +125,8 @@ public class SessionFragment extends Fragment {
                     @Override
                     public void onClick(View view) {
                         dialog.dismiss();
-                        int del = dao.del(ChatDao.SESSIONLIST,cursor.getString(0));
-                        if (del != 0){
+                        int del = dao.del(ChatDao.SESSIONLIST, cursor.getString(0));
+                        if (del != 0) {
                             Refresh();
                         }
                     }
@@ -131,7 +138,7 @@ public class SessionFragment extends Fragment {
 
     /**
      * TODO 功能：刷新页面
-     *
+     * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/15
@@ -143,7 +150,7 @@ public class SessionFragment extends Fragment {
 
     /**
      * TODO 功能：接收消息广播
-     *
+     * <p>
      * 参数说明:
      * 作    者:   沈 亮
      * 创建时间:   2019/1/15
