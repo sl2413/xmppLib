@@ -39,6 +39,7 @@ import com.shenl.xmpplibrary.fragment.EmojiFragment;
 import com.shenl.xmpplibrary.service.MsgService;
 import com.shenl.xmpplibrary.utils.DateTimeUtils;
 import com.shenl.xmpplibrary.utils.ImageUtils;
+import com.shenl.xmpplibrary.utils.SystemInfo;
 import com.shenl.xmpplibrary.utils.XmppUtils;
 
 import org.jivesoftware.smack.PacketListener;
@@ -71,34 +72,6 @@ public class ChatActivity extends FragmentActivity {
     private String name;
     private String isGroup;
     private boolean isEmogiShow;
-    /*private Handler handler = new Handler() {
-        public void handleMessage(android.os.Message msg) {
-            String[] args = (String[]) msg.obj;
-            switch (msg.what) {
-                case 1:
-                    String dateStr = DateTimeUtils.formatDate(new Date());
-                    Msg m = new Msg(dateStr, args[0], args[1], "IN");
-                    list.add(m);
-                    adapter.notifyDataSetChanged();
-                    listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
-                    break;
-                case 2:
-                    String dateStr2 = DateTimeUtils.formatDate(new Date());
-                    Msg m2 = new Msg(dateStr2, args[0], "", "IN", args[1]);
-                    list.add(m2);
-                    adapter.notifyDataSetChanged();
-                    listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
-                    break;
-                case 3:
-                    String dateStr3 = DateTimeUtils.formatDate(new Date());
-                    Msg m3 = new Msg(dateStr3, args[0], "", "OUT", args[1]);
-                    list.add(m3);
-                    adapter.notifyDataSetChanged();
-                    listview.setSelection(ListView.FOCUS_DOWN);// 刷新到底部
-                    break;
-            }
-        }
-    };*/
     private ImageView iv_emogi;
     private FrameLayout fl_emogi;
     private LinearLayout ll_emogi;
@@ -107,7 +80,6 @@ public class ChatActivity extends FragmentActivity {
     private ChatDao dao;
     private Cursor cursor;
     private ChatDao.sessionBean sessionBean;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -172,7 +144,6 @@ public class ChatActivity extends FragmentActivity {
         } else {
             title.setText("与 " + name + " 聊天中");
         }
-
         cursor = dao.query(user, XmppUtils.XmppGetJid());
         adapter = new MyAdapter(ChatActivity.this, cursor);
         listview.setAdapter(adapter);
@@ -212,52 +183,9 @@ public class ChatActivity extends FragmentActivity {
                 fl_emogi.setVisibility(View.GONE);
             }
         });
-        //文件接收监听器
-        XmppUtils.XmppGetFile(new FileTransferListener() {
-            @Override
-            public void fileTransferRequest(final FileTransferRequest request) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //文件接收
-                        IncomingFileTransfer transfer = request.accept();
-                        //获取文件名字
-                        String fileName = transfer.getFileName();
-                        //本地创建文件+
-                        File sdCardDir = new File(getCacheDir().getPath() + "/xmpp");
-                        if (!sdCardDir.exists()) {//判断文件夹目录是否存在
-                            sdCardDir.mkdir();//如果不存在则创建
-                        }
-                        String save_path = sdCardDir + "/" + fileName;
-                        File file = new File(save_path);
-                        //接收文件
-                        try {
-                            transfer.recieveFile(file);
-                            while (!transfer.isDone()) {
-                                if (transfer.getStatus().equals(FileTransfer.Status.error)) {
-                                    System.out.println("ERROR!!! " + transfer.getError());
-                                } else {
-                                    System.out.println(transfer.getStatus());
-                                    System.out.println(transfer.getProgress());
-                                }
-                            }
-                            //判断是否完全接收文件
-                            if (transfer.isDone()) {
-                                String[] args = new String[]{name, save_path};
-                                /*android.os.Message msg = handler.obtainMessage();
-                                msg.what = 2;
-                                msg.obj = args;
-                                //发送msg,刷新adapter显示图片
-                                msg.sendToTarget();*/
-                            }
-                        } catch (XMPPException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
-            }
-        });
+
         if ("1".equals(isGroup)) {
+            //群成员列表查看按钮
             iv_roomPerson.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -277,33 +205,9 @@ public class ChatActivity extends FragmentActivity {
                     //判断是否是本人发出的消息 不是则显示
                     if (!nameOrGroup[1].equals(MsgService.nickname)) {
                         String[] args = new String[]{nameOrGroup[1], message.getBody()};
-                        // 在handler里取出来显示消息
-                        /*android.os.Message msg = handler.obtainMessage();
-                        msg.what = 1;
-                        msg.obj = args;
-                        msg.sendToTarget();*/
                     }
                 }
             });
-        } else {
-            //消息监听器
-            /*XmppUtils.XmppGetMessage(new MessageListener() {
-                @Override
-                public void processMessage(Chat chat, Message message) {
-                    Log.e("shenl", message.getBody());
-                    // 获取自己好友发来的信息
-                    if (message.getBody().length() > 0) {
-                        // 获取用户、消息、时间、IN
-                        String from = message.getFrom().substring(0, message.getFrom().indexOf("@"));
-                        String[] args = new String[]{from, message.getBody()};
-                        // 在handler里取出来显示消息
-                        android.os.Message msg = handler.obtainMessage();
-                        msg.what = 1;
-                        msg.obj = args;
-                        msg.sendToTarget();
-                    }
-                }
-            });*/
         }
     }
 
@@ -348,10 +252,6 @@ public class ChatActivity extends FragmentActivity {
                     @Override
                     public void Success() {
                         String[] args = new String[]{MsgService.nickname, path};
-                        /*android.os.Message msg = handler.obtainMessage();
-                        msg.what = 3;
-                        msg.obj = args;
-                        msg.sendToTarget();*/
                         Log.e("shenl", "发送成功");
                     }
 
@@ -408,6 +308,16 @@ public class ChatActivity extends FragmentActivity {
                 }
             }).start();
         }
+
+        ContentValues sessionValue = new ContentValues();
+        sessionValue.put("Jid", user);
+        sessionValue.put("nickName", name);
+        sessionValue.put("head", "");
+        sessionValue.put("content", body);
+        sessionValue.put("contentType", SystemInfo.TEXT);
+        sessionValue.put("isGroup", isGroup);
+        sessionValue.put("UnReadCount", 0);
+        long add = dao.Add(ChatDao.SESSIONLIST, sessionValue);
 
         //缓存聊天记录
         ContentValues values = new ContentValues();

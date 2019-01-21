@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -81,14 +82,17 @@ public class SessionFragment extends Fragment {
                 cursor.moveToPosition(position);
                 ContentValues values = new ContentValues();
                 values.put("UnReadCount", "");
-                int upd = dao.upd(ChatDao.SESSIONLIST, values, cursor.getString(1));
+                String isGroup = cursor.getString(7);
+                String Jid = cursor.getString(1);
+                String name = cursor.getString(2);
+                int upd = dao.upd(ChatDao.SESSIONLIST, values, Jid);
                 if (upd != 0){
                     Refresh();
                 }
                 Intent intent = new Intent(getContext(), ChatActivity.class);
-                intent.putExtra("isGroup", cursor.getString(7));
-                intent.putExtra("user", cursor.getString(1));
-                intent.putExtra("name", cursor.getString(2));
+                intent.putExtra("isGroup", isGroup);
+                intent.putExtra("user", Jid);
+                intent.putExtra("name", name);
                 startActivity(intent);
             }
         });

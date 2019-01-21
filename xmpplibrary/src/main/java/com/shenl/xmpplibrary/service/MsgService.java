@@ -21,11 +21,17 @@ import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smackx.filetransfer.FileTransfer;
+import org.jivesoftware.smackx.filetransfer.FileTransferListener;
+import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
+import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 
+import java.io.File;
 import java.util.Date;
 
 public class MsgService extends Service {
@@ -33,6 +39,7 @@ public class MsgService extends Service {
     public static XMPPConnection xmppConnection;
     public static String nickname;
     private Intent intent = new Intent("com.shenl.xmpplibrary.fragment.SessionFragment.MsgReceiver");
+    private ChatDao dao;
 
 
     @Override
@@ -49,25 +56,27 @@ public class MsgService extends Service {
 
     @Override
     public void onCreate() {
+        dao = new ChatDao(MsgService.this);
+        //文本消息接收监听
         XmppUtils.XmppGetMessage(new MessageListener() {
             @Override
             public void processMessage(Chat chat, Message message) {
+                Log.e("shenl","来自..."+message.getFrom());
                 if (!TextUtils.isEmpty(message.getBody())) {
                     String user = message.getFrom();
                     user = user.substring(0, user.indexOf("/"));
-                    ChatDao dao = new ChatDao(MsgService.this);
                     ChatDao.FriendBean friendBean = dao.queryInfo(user);
                     //缓存聊天记录
                     final String dateStr = DateTimeUtils.formatDate(new Date());
                     ContentValues sessionValues = new ContentValues();
-                    sessionValues.put("FromJid",user);
-                    sessionValues.put("ToJid",XmppUtils.XmppGetJid());
-                    sessionValues.put("name",friendBean.nickName);
-                    sessionValues.put("data",dateStr);
-                    sessionValues.put("title",message.getBody());
-                    sessionValues.put("myself","IN");
-                    sessionValues.put("imgPath","");
-                    dao.Add(ChatDao.MESSAGE,sessionValues);
+                    sessionValues.put("FromJid", user);
+                    sessionValues.put("ToJid", XmppUtils.XmppGetJid());
+                    sessionValues.put("name", friendBean.nickName);
+                    sessionValues.put("data", dateStr);
+                    sessionValues.put("title", message.getBody());
+                    sessionValues.put("myself", "IN");
+                    sessionValues.put("imgPath", "");
+                    dao.Add(ChatDao.MESSAGE, sessionValues);
                     ChatDao.sessionBean sessionBean = dao.querySession(user);
                     showNotification("收到一条新消息......", "好友消息", message.getBody(), Integer.parseInt(sessionBean.id));
                     if (sessionBean == null) {
@@ -80,25 +89,107 @@ public class MsgService extends Service {
                         sessionValue.put("isGroup", "0");
                         sessionValue.put("UnReadCount", 1);
                         long add = dao.Add(ChatDao.SESSIONLIST, sessionValue);
-                        if (add != -1){
+                        if (add != -1) {
                             sendBroadcast(intent);
                         }
                     } else {
                         ContentValues sessionValue = new ContentValues();
                         sessionValue.put("content", message.getBody());
-                        if (TextUtils.isEmpty(sessionBean.UnReadCount)){
-                            sessionValue.put("UnReadCount",1);
-                        }else{
-                            sessionValue.put("UnReadCount",Integer.parseInt(sessionBean.UnReadCount)+1);
+                        if (TextUtils.isEmpty(sessionBean.UnReadCount)) {
+                            sessionValue.put("UnReadCount", 1);
+                        } else {
+                            sessionValue.put("UnReadCount", Integer.parseInt(sessionBean.UnReadCount) + 1);
                         }
                         int upd = dao.upd(ChatDao.SESSIONLIST, sessionValue, user);
-                        if (upd != 0){
+                        if (upd != 0) {
                             sendBroadcast(intent);
                         }
                     }
                 }
             }
         });
+
+        //文件消息接收监听
+        XmppUtils.XmppGetFile(new FileTransferListener() {
+            @Override
+            public void fileTransferRequest(final FileTransferRequest request) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //文件接收
+                        IncomingFileTransfer transfer = request.accept();
+                        //获取文件名字
+                        String fileName = transfer.getFileName();
+                        //本地创建文件+
+                        File sdCardDir = new File(getCacheDir().getPath() + "/xmpp");
+                        if (!sdCardDir.exists()) {//判断文件夹目录是否存在
+                            sdCardDir.mkdir();//如果不存在则创建
+                        }
+                        String save_path = sdCardDir + "/" + fileName;
+                        File file = new File(save_path);
+                        //接收文件
+                        try {
+                            transfer.recieveFile(file);
+                            while (!transfer.isDone()) {
+                                if (transfer.getStatus().equals(FileTransfer.Status.error)) {
+                                    System.out.println("ERROR!!! " + transfer.getError());
+                                } else {
+                                    System.out.println(transfer.getStatus());
+                                    System.out.println(transfer.getProgress());
+                                }
+                            }
+                            //判断是否完全接收文件
+                            if (transfer.isDone()) {
+                                final String dateStr = DateTimeUtils.formatDate(new Date());
+                                String Jid = request.getRequestor().split("/")[0];
+                                ChatDao.FriendBean friendBean = dao.queryInfo(Jid);
+                                ChatDao.sessionBean sessionBean = dao.querySession(Jid);
+
+                                ContentValues messageValue = new ContentValues();
+                                messageValue.put("FromJid",Jid);
+                                messageValue.put("ToJid",XmppUtils.XmppGetJid());
+                                messageValue.put("name",friendBean.nickName);
+                                messageValue.put("data",dateStr);
+                                messageValue.put("title","");
+                                messageValue.put("myself","IN");
+                                messageValue.put("imgPath",save_path);
+                                dao.Add(ChatDao.MESSAGE, messageValue);
+
+                                if (sessionBean == null){
+                                    ContentValues values = new ContentValues();
+                                    values.put("Jid", Jid);
+                                    values.put("nickName", friendBean.nickName);
+                                    values.put("head", "");
+                                    values.put("content", "[文件]");
+                                    values.put("contentType", SystemInfo.IMAGE);
+                                    values.put("UnReadCount", 1);
+                                    values.put("isGroup", 0);
+                                    long add = dao.Add(ChatDao.SESSIONLIST, values);
+                                    if (add != -1){
+                                        sendBroadcast(intent);
+                                    }
+                                }else{
+                                    ContentValues sessionValue = new ContentValues();
+                                    sessionValue.put("content", "[文件]");
+                                    if (TextUtils.isEmpty(sessionBean.UnReadCount)) {
+                                        sessionValue.put("UnReadCount", 1);
+                                    } else {
+                                        sessionValue.put("UnReadCount", Integer.parseInt(sessionBean.UnReadCount) + 1);
+                                    }
+                                    int upd = dao.upd(ChatDao.SESSIONLIST, sessionValue, Jid);
+                                    if (upd != 0) {
+                                        sendBroadcast(intent);
+                                    }
+                                }
+                            }
+                        } catch (XMPPException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
+        });
+
         addSubscriptionListener();
         super.onCreate();
     }
